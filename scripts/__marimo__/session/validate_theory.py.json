@@ -1,0 +1,33 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "28742237114087d68ba223d01a154ffe",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "362286d6cebe4b660bf0bd3996a2b3a1",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "99f21f37a79ab7f990efefc30ad2b82b",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "83d1471a95722811b1dd97e04e524d8f",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}

@@ -1,0 +1,364 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "847074b423d43cde369b7700fb32eb94",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"clean-the-gq39-stopped-note-annotations-into-a-reliable-training-set\">Clean the GQ39 stopped-note annotations into a reliable training set</h1>\n<ol>\n<li><strong>Per-piece gong offset K</strong>: each piece's jianpu \"1\" sits at a fixed integer semitone offset from open string 1.</li>\n</ol>\n<span class=\"paragraph\">e.g. -7 = gong at open string 4's pitch class, -12 = gong at string 1's.</span>\n<span class=\"paragraph\">K is estimated as the rounded median of (physical - notated) over the piece.</span>\n<ol start=\"2\">\n<li><strong>Range-boundary convention differs per piece</strong>:<ul>\n<li>convention \"at1\" (original default): the range digit increments at degree 1 (strict octave arithmetic). (1-7)</li>\n<li>convention \"at5\": degrees 5, 6, 7 are labelled with the range of the octave they LEAD INTO, i.e. their physical octave is (annotated range - 1). This matches how qin players group the scale as 5,6,1,2,3 (the tuning sequence) rather than 1-7.</li>\n</ul>\n</li>\n</ol>\n<span class=\"paragraph\">Empirically, all K=-7 pieces (guan/jiou/liang, and yi07's modulated section) use \"at5\"; the rest use \"at1\". We select per piece by best fit rather than hard-coding the correlation.</span>\n<span class=\"paragraph\">(jiou04 agreement 56/86 under at1 -&gt; 86/86 under at5; yi07_modulation prefers at5 while yi07_originalmode prefers at1 \u2014 same piece, same annotator, convention follows the gong reading.)</span>\n<ol start=\"3\">\n<li><strong>Altered physical tuning (\u7d27\u4e94\u5f26) is out of scope, not a K/convention case</strong>: \u501f\u8c03 (a relabeling of which string is \"gong\") is fully absorbed by K \u2014 no new machinery needed. But a handful of pieces retune a string's actual physical pitch (e.g. \u7d27\u4e94\u5f26), which K/convention cannot correct, since K is a single constant per piece and can't shift one string differently from the rest. These pieces are excluded up front, before fitting, rather than left to fall out as per-note outliers \u2014 confirmed pieces: <code>EXCLUDED_TUNING_PIECES</code> below.</li>\n<li><strong>Loader-level ambiguity (<code>suspect</code>)</strong>: some cells pack multiple notes as a comma-separated list, but Excel silently turned that comma into a decimal point on integer columns (<code>degree</code>, <code>range</code>, <code>string</code>), and/or the <code>position</code> cell arrived as a single fractional value even though the row holds &gt;1 note. <code>dataset_gq39.py</code> reconstructs these, and when it has to <em>infer</em> a split for <code>position</code> from a physical necessity argument (two different degrees on the same string can't share a position) rather than reading an explicit comma, it marks that note <code>suspect=True</code>. These are distinct from <code>outlier</code>: they may pass the residual tolerance and get <code>status=\"clean\"</code>, but the split was inferred, not read directly, so they're worth a first-pass spot check.</li>\n<li>After convention selection, remaining exact \u00b11-octave residuals are isolated range typos: repaired by adjusting range, and marked <code>status=\"repaired\"</code> so downstream users can exclude them if wanted.</li>\n<li>Anything still off by &gt;0.6 semitones is flagged <code>status=\"outlier\"</code> and excluded from the clean set (candidates: chuo/zhu ornament pitches annotated at slide targets, genuine typos, or an unmarked mid-piece \u501f\u8c03 not reflected in <code>section</code> \u2014 future work).</li>\n</ol>\n<span class=\"paragraph\">Output: <code>data/gq39_clean.csv</code> with one row per stopped note.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "c3870cb69147cb4f47d8284cf2c7b2c4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a6b6863923745764ccd69828e27f6a4f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "c7c6666b3da98a1dde9eaea8d2d12489",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "a0cc73e12a0ee698b8d73074ce698e5f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "e7e9fa2cd04978ea1baeeb064a2ab09b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"load-and-classify-every-stopped-note\">Load and classify every stopped note</h2>\n<span class=\"paragraph\">Altered-tuning pieces are dropped here, before any K/convention\nfitting happens, so they never influence a fit and never show up\nas false outliers.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "fce9941302e02ae631f2c1a98ccaaa2f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "[gu01/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 3, 'string': 2, 'position': 2} (degree=1.6 range='2,1,1' string=2.2 position='7.6,9')\n[guan01/section1] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 3, 'position': 2} (degree='1,1,6' range='1,3,3' string='3,7,7' position='6.2,7')\n[jiou02/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 2, 'string': 2, 'position': 3} (degree=3.5 range=2.3 string=6.6 position='7.,9,7')\n[yu03/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 2, 'position': 3} (degree='5,5,6' range='1,2,2' string=3.5 position='0,9,7.9')\nexcluded 244 stopped notes from altered-tuning pieces: ['yang01', 'yang02', 'yang03', 'yu02', 'yu03']\n972 stopped notes remain in scope\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "96217dea33d57e80932ec4be9d0ed1d4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "dee6a71a75511fe462d3d024b2d9ac61",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"write-the-cleaned-csv\">Write the cleaned CSV</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "8a9ada26277f5f061f00b03f384c8dae",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "wrote /home/s5523505/Desktop/SEM/MasterProject/QinPos/data/gq39_clean.csv (972 stopped notes)\n  clean    :  939  (96.6%)\n  repaired :    2  (0.2%)\n  outlier  :   31  (3.2%)\n  usable for training: 941/972 = 96.8%\n  suspect (position inferred from packed cell, worth spot-checking): 76 (7.8%)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "emfo",
+      "code_hash": "4426f8d7af0dc6099182b45a450ebbbd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-suspect-notes-loader-inferred-position-split\">Manual review: suspect notes (loader-inferred position split)</h2>\n<span class=\"paragraph\">These passed the residual check (mostly <code>status=\"clean\"</code>), but their\n<code>position</code> was reconstructed by the loader from a packed cell rather\nthan read directly \u2014 see point 4 above. Worth a first-pass spot\ncheck against the score, since the split relies on a physical\nargument (same string, different degree implies different position)\nrather than an explicit comma in the source file.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "e7b31223294331e74f17ccc7d1ba3951",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "76 suspect notes to spot-check\n\n  ciou01               idx=   6 string=7 position= 9.00 degree=6 range=2 status=clean     resid=+0.02\n  ciou01               idx=   8 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  ciou01               idx=  16 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  ciou01               idx=  17 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  ciou01               idx=  23 string=2 position= 9.00 degree=6 range=1 status=clean     resid=+0.02\n  ciou01               idx=  24 string=2 position=10.00 degree=5 range=1 status=clean     resid=-0.02\n  ciou01               idx=  66 string=5 position= 9.00 degree=3 range=2 status=clean     resid=+0.02\n  ciou01               idx=  67 string=5 position=10.00 degree=2 range=2 status=clean     resid=-0.02\n  ciou01               idx=  87 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  ciou01               idx=  88 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  ciou01               idx=  96 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  ciou01               idx=  97 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  guan01               idx=  21 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  guan01               idx=  32 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou01               idx=   9 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou01               idx=  49 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou02               idx=   7 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou02               idx=  27 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou04               idx=   9 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  jiou04               idx= 117 string=6 position= 7.00 degree=5 range=3 status=clean     resid=+0.00\n  liang01              idx=  84 string=3 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  liang02              idx=  64 string=3 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang01              idx=  48 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang01              idx=  58 string=5 position= 9.00 degree=3 range=2 status=clean     resid=+0.02\n  siang01              idx=  63 string=5 position=10.00 degree=2 range=2 status=clean     resid=-0.02\n  siang01              idx=  64 string=5 position= 9.00 degree=3 range=2 status=clean     resid=+0.02\n  siang01              idx=  76 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang01              idx= 107 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang01              idx= 117 string=5 position= 9.00 degree=3 range=2 status=clean     resid=+0.02\n  siang02              idx=  21 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang02              idx=  71 string=6 position= 9.00 degree=5 range=2 status=clean     resid=+0.02\n  siang02              idx=  81 string=5 position= 9.00 degree=3 range=2 status=clean     resid=+0.02\n  yi01                 idx=  34 string=4 position= 8.00 degree=3 range=2 status=clean     resid=-0.16\n  yi01                 idx=  35 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx=  47 string=6 position= 8.00 degree=6 range=2 status=clean     resid=-0.16\n  yi01                 idx=  48 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  yi01                 idx=  51 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx=  52 string=4 position= 8.00 degree=3 range=2 status=clean     resid=-0.16\n  yi01                 idx=  53 string=1 position= 8.00 degree=6 range=1 status=clean     resid=-0.16\n  yi01                 idx=  54 string=1 position= 7.00 degree=1 range=2 status=clean     resid=+0.00\n  yi01                 idx=  62 string=4 position= 8.00 degree=3 range=2 status=clean     resid=-0.16\n  yi01                 idx=  63 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx=  73 string=6 position= 8.00 degree=6 range=2 status=clean     resid=-0.16\n  yi01                 idx=  74 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  yi01                 idx=  75 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx=  76 string=4 position= 8.00 degree=3 range=2 status=clean     resid=-0.16\n  yi01                 idx=  77 string=1 position= 8.00 degree=6 range=1 status=clean     resid=-0.16\n  yi01                 idx=  78 string=1 position= 7.00 degree=1 range=2 status=clean     resid=+0.00\n  yi01                 idx=  86 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx=  87 string=4 position= 8.00 degree=3 range=2 status=clean     resid=-0.16\n  yi01                 idx=  88 string=1 position= 8.00 degree=6 range=1 status=clean     resid=-0.16\n  yi01                 idx=  89 string=1 position= 7.00 degree=1 range=2 status=clean     resid=+0.00\n  yi01                 idx= 108 string=6 position= 8.00 degree=6 range=2 status=clean     resid=-0.16\n  yi01                 idx= 109 string=6 position= 7.00 degree=1 range=3 status=clean     resid=+0.00\n  yi01                 idx= 114 string=3 position= 8.00 degree=2 range=2 status=clean     resid=-0.16\n  yi01                 idx= 115 string=3 position= 7.00 degree=4 range=2 status=clean     resid=+0.00\n  yi01                 idx= 116 string=4 position= 7.00 degree=5 range=2 status=clean     resid=+0.00\n  yi01                 idx= 117 string=4 position= 8.00 degree=4 range=2 status=outlier   resid=-1.16\n  yi01                 idx= 118 string=3 position= 7.00 degree=2 range=2 status=outlier   resid=+3.00\n  yi01                 idx= 119 string=3 position= 8.00 degree=4 range=2 status=outlier   resid=-3.16\n  yi01                 idx= 120 string=2 position= 7.00 degree=2 range=2 status=clean     resid=+0.00\n  yi01                 idx= 121 string=2 position= 8.00 degree=1 range=2 status=outlier   resid=-1.16\n  yi01                 idx= 122 string=1 position= 8.00 degree=6 range=1 status=clean     resid=-0.16\n  yi01                 idx= 123 string=1 position= 7.00 degree=1 range=2 status=clean     resid=+0.00\n  yi04                 idx=   1 string=7 position= 7.00 degree=2 range=3 status=clean     resid=+0.00\n  yi04                 idx=  15 string=7 position= 4.00 degree=2 range=4 status=clean     resid=+0.00\n  yi04                 idx=  19 string=7 position= 5.00 degree=6 range=3 status=clean     resid=+0.02\n  yi04                 idx=  26 string=7 position= 7.00 degree=2 range=3 status=clean     resid=+0.00\n  yi06                 idx=  14 string=5 position=10.00 degree=2 range=2 status=clean     resid=-0.02\n  yi06                 idx=  15 string=5 position=12.00 degree=1 range=2 status=clean     resid=+0.16\n  yi06                 idx=  18 string=5 position=10.00 degree=2 range=2 status=clean     resid=-0.02\n  yi06                 idx=  19 string=5 position=12.00 degree=1 range=2 status=clean     resid=+0.16\n  yi07_modulation      idx=  20 string=2 position=10.00 degree=2 range=1 status=clean     resid=-0.02\n  yi07_modulation      idx=  21 string=2 position=12.00 degree=1 range=1 status=clean     resid=+0.16\n  yi07_originalmode    idx=  20 string=2 position=10.00 degree=5 range=1 status=clean     resid=-0.02\n  yi07_originalmode    idx=  21 string=2 position=12.00 degree=4 range=1 status=clean     resid=+0.16\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "73b9fdb22102708ede9e4d140439cddf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-outlier-notes\">Manual review: outlier notes</h2>\n<span class=\"paragraph\">These are excluded from the clean set. Worth checking against the\noriginal score for chuo/zhu slide ornaments (annotated at the\nslide target rather than the starting pitch), genuine typos, or an\nunmarked mid-piece \u501f\u8c03 that a single per-piece K can't absorb\n(compare <code>section</code> values across the flagged rows for a piece).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "f5620d9a52f7f9c9ba4e32d356a17725",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "31 outlier notes to review\n\n  ciou01               idx=  33 string=5 position= 9.00 degree=2 range=2 suspect=False resid=+2.02\n  feng01               idx=   9 string=7 position= 9.00 degree=2 range=2 suspect=False resid=+7.02\n  feng01               idx=  20 string=6 position= 7.60 degree=6 range=2 suspect=False resid=+1.04\n  feng01               idx=  25 string=3 position= 8.50 degree=1 range=2 suspect=False resid=+0.91\n  feng01               idx=  78 string=3 position= 8.50 degree=1 range=2 suspect=False resid=+0.91\n  feng01               idx=  79 string=3 position= 7.60 degree=2 range=2 suspect=False resid=+1.04\n  feng01               idx=  80 string=3 position= 8.50 degree=1 range=2 suspect=False resid=+0.91\n  feng01               idx=  96 string=5 position= 7.90 degree=3 range=2 suspect=False resid=+2.13\n  liang01              idx=  78 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  liang01              idx=  80 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  liang01              idx=  82 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  liang02              idx=   2 string=7 position= 9.00 degree=2 range=2 suspect=False resid=+2.02\n  liang02              idx=  15 string=7 position= 9.00 degree=2 range=2 suspect=False resid=+2.02\n  liang02              idx=  58 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  liang02              idx=  60 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  liang02              idx=  62 string=3 position=10.00 degree=3 range=1 suspect=False resid=+0.98\n  yi01                 idx= 111 string=4 position= 8.00 degree=4 range=2 suspect=False resid=-1.16\n  yi01                 idx= 113 string=4 position= 8.00 degree=4 range=2 suspect=False resid=-1.16\n  yi01                 idx= 117 string=4 position= 8.00 degree=4 range=2 suspect=True  resid=-1.16\n  yi01                 idx= 118 string=3 position= 7.00 degree=2 range=2 suspect=True  resid=+3.00\n  yi01                 idx= 119 string=3 position= 8.00 degree=4 range=2 suspect=True  resid=-3.16\n  yi01                 idx= 121 string=2 position= 8.00 degree=1 range=2 suspect=True  resid=-1.16\n  yi01                 idx= 125 string=2 position= 8.00 degree=1 range=2 suspect=False resid=-1.16\n  yi01                 idx= 127 string=2 position= 8.00 degree=1 range=2 suspect=False resid=-1.16\n  yi03                 idx=   2 string=7 position= 5.00 degree=5 range=3 suspect=False resid=+2.02\n  yi04                 idx=  56 string=4 position= 9.00 degree=5 range=1 suspect=False resid=+7.02\n  yi04                 idx=  59 string=4 position= 9.00 degree=5 range=1 suspect=False resid=+7.02\n  yi04                 idx=  73 string=4 position= 8.00 degree=4 range=2 suspect=False resid=-1.16\n  yi05                 idx=  36 string=4 position= 9.00 degree=5 range=1 suspect=False resid=+7.02\n  yi05                 idx=  39 string=4 position= 9.00 degree=5 range=1 suspect=False resid=+7.02\n  yi06                 idx=  25 string=2 position=10.90 degree=5 range=1 suspect=False resid=-1.03\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "abd1b87023b09bf9a4e2e65bd37e006c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "resid=-3.20  n=1  e.g. string=3 position= 8.00 degree=4 range=2\n    idx: [119]\nresid=-1.20  n=6  e.g. string=4 position= 8.00 degree=4 range=2\n    idx: [111, 113, 117, 121, 125, 127]\nresid=+3.00  n=1  e.g. string=3 position= 7.00 degree=2 range=2\n    idx: [118]\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "645f3220356708cb9ba59e9a5b74402b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-same-piece-string-position-mapped-to-multiple-degrees\">Manual review: same (piece, string, position) mapped to multiple degrees</h2>\n<span class=\"paragraph\">Re-run against the corrected loader's <code>stopped</code> list. Cases that\nwere purely a loader parsing artifact (same string, degrees that\nare one scale-step apart, position now correctly split) should\nhave dropped out already. What remains here is the set worth\nchecking with a performer for genuine chuo/zhu/yin/nao ornaments.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "e0369848170f90306d76c097a8af30cf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "piece                string position  degrees\n--------------------------------------------------\nciou01                    5     9.00  [2, 3]\nfeng01                    7     9.00  [2, 6]\nliang02                   7     9.00  [2, 3]\nyi01                      3     7.00  [2, 4]\nyi01                      3     8.00  [2, 4]\nyi01                      4     8.00  [3, 4]\nyi03                      7     5.00  [5, 6]\nyi04                      4     8.00  [3, 4]\nyi04                      4     9.00  [2, 5]\nyi05                      4     9.00  [2, 5]\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "4f80da4918d3b9b2b714ebdbe6f4aa70",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-residual-by-degree-across-the-cleaned-set\">Manual review: residual by degree, across the cleaned set</h2>\n<span class=\"paragraph\">Uses the already-corrected <code>residual</code> column (correct K and\nbest-fit convention baked in per piece), so a nonzero mean here\nfor one degree across many pieces is a signal of a systematic\nphysics-layer issue (e.g. <code>DEGREE_SEMITONES</code> or a just-intonation\nratio in <code>theory.py</code>) \u2014 not per-piece K/convention noise.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "841398e464140448dc8ce86db4963510",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  degree=1: mean=-0.030  n=234\n  degree=2: mean=+0.082  n=182\n  degree=3: mean=+0.062  n=141\n  degree=4: mean=-0.531  n=15\n  degree=5: mean=+0.166  n=219\n  degree=6: mean=-0.062  n=179\n  degree=7: mean=-0.176  n=2\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "162696f22eaebc6ff3f93343a166d7a5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-per-piece-residual-by-degree-and-by-section\">Manual review: per-piece residual by degree, and by section</h2>\n<span class=\"paragraph\">Change <code>TARGET_PIECE</code> to inspect a different piece. The by-section\nbreakdown matters for pieces like yi01/03/04/05/06 (\u501f\u8c03, not\naltered tuning, so still in scope) \u2014 if the outlier rows above\ncluster in one <code>section</code>, that section likely needs its own K\nrather than sharing the whole piece's single fitted K.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "075baaf32deea46e91e01af2635de946",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "d2a95e97bb7fcb8e288c1fa6885e9133",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "piece=jiou01  convention=at5  K=-7\n--- summary by degree ---\n  degree=1: mean=+0.02  n=11\n  degree=2: mean=+0.02  n=4\n  degree=3: mean=+0.09  n=5\n  degree=5: mean=+0.00  n=9\n  degree=6: mean=+0.08  n=7\n--- summary by section ---\n  section=\u5de5\u4f5c\u88681: mean=+0.03  n=36\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}

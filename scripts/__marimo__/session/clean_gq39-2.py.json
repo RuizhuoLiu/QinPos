@@ -1,0 +1,271 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "5e80dcae27973f4d20507571b12b2fe0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"clean-the-gq39-stopped-note-annotations-into-a-reliable-training-set\">Clean the GQ39 stopped-note annotations into a reliable training set</h1>\n<ol>\n<li><strong>Per-piece gong offset K</strong>: each piece's jianpu \"1\" sits at a fixed integer semitone offset from open string 1.</li>\n</ol>\n<span class=\"paragraph\">e.g. -7 = gong at open string 4's pitch class, -12 = gong at string 1's.</span>\n<span class=\"paragraph\">K is estimated as the rounded median of (physical - notated) over the piece.</span>\n<ol start=\"2\">\n<li><strong>Range-boundary convention differs per piece</strong>:<ul>\n<li>convention \"at1\" (original default): the range digit increments at degree 1 (strict octave arithmetic). (1-7)</li>\n<li>convention \"at5\": degrees 5, 6, 7 are labelled with the range of the octave they LEAD INTO, i.e. their physical octave is (annotated range - 1). This matches how qin players group the scale as 5,6,1,2,3 (the tuning sequence) rather than 1-7.</li>\n</ul>\n</li>\n</ol>\n<span class=\"paragraph\">Empirically, all K=-7 pieces (guan/jiou/liang, and yi07's modulated section) use \"at5\"; the rest use \"at1\". We select per piece by best fit rather than hard-coding the correlation.</span>\n<span class=\"paragraph\">(jiou04 agreement 56/86 under at1 -&gt; 86/86 under at5; yi07_modulation prefers at5 while yi07_originalmode prefers at1 \u2014 same piece, same annotator, convention follows the gong reading.)</span>\n<ol start=\"3\">\n<li>After convention selection, remaining exact \u00b11-octave residuals are isolated range typos: repaired by adjusting range, and marked <code>status=\"repaired\"</code> so downstream users can exclude them if wanted.</li>\n<li>Anything still off by &gt;0.6 semitones is flagged <code>status=\"outlier\"</code> and excluded from the clean set (candidates: chuo/zhu ornament pitches annotated at slide targets, or genuine typos \u2014 future work).</li>\n</ol>\n<span class=\"paragraph\">Output: <code>data/gq39_clean.csv</code> with one row per stopped note.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "8331857520e705134f649ba6b4e5ff4c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a6b6863923745764ccd69828e27f6a4f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "c7c6666b3da98a1dde9eaea8d2d12489",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "96610136b23535a0990c3121319ca3ff",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "f6b8244edd8db57cd0756db7cacc58d0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"load-and-classify-every-stopped-note\">Load and classify every stopped note</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "8eb4096286836ee0c336522b781b1220",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "37fd34f968c645a296681d8b8a94a0dd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "dee6a71a75511fe462d3d024b2d9ac61",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"write-the-cleaned-csv\">Write the cleaned CSV</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "7097bd630238141c327f4e2a8a941295",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "wrote /home/s5523505/Desktop/SEM/MasterProject/QinPos/data/gq39_clean.csv (1208 stopped notes)\n  clean    : 1054  (87.3%)\n  repaired :   44  (3.6%)\n  outlier  :  110  (9.1%)\n  usable for training: 1098/1208 = 90.9%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "emfo",
+      "code_hash": "fb34ed3a40419465d1a23f9f39577932",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-outlier-notes\">Manual review: outlier notes</h2>\n<span class=\"paragraph\">These are excluded from the clean set. Worth checking against the\noriginal score for chuo/zhu slide ornaments (annotated at the\nslide target rather than the starting pitch) versus genuine typos.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "6eac881252c580c1ccc8ba42ae9ecb9c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "110 outlier notes to review\n\n  ciou01               idx=  16 string=6 position= 9.70 degree=5 range=2 resid=-1.43\n  ciou01               idx=  17 string=6 position= 9.70 degree=1 range=3 resid=-6.43\n  ciou01               idx=  24 string=2 position= 9.10 degree=5 range=1 resid=+1.80\n  ciou01               idx=  33 string=5 position= 9.10 degree=2 range=2 resid=+1.80\n  ciou01               idx=  67 string=5 position= 9.10 degree=2 range=2 resid=+1.80\n  ciou01               idx=  87 string=6 position= 9.70 degree=5 range=2 resid=-1.43\n  ciou01               idx=  88 string=6 position= 9.70 degree=1 range=3 resid=-6.43\n  ciou01               idx=  96 string=6 position= 9.70 degree=5 range=2 resid=-1.43\n  ciou01               idx=  97 string=6 position= 9.70 degree=1 range=3 resid=-6.43\n  feng01               idx=   9 string=7 position= 9.00 degree=2 range=2 resid=+7.02\n  feng01               idx=  20 string=6 position= 7.60 degree=6 range=2 resid=+1.04\n  feng01               idx=  25 string=3 position= 8.50 degree=1 range=2 resid=+0.91\n  feng01               idx=  78 string=3 position= 8.50 degree=1 range=2 resid=+0.91\n  feng01               idx=  79 string=3 position= 7.60 degree=2 range=2 resid=+1.04\n  feng01               idx=  80 string=3 position= 8.50 degree=1 range=2 resid=+0.91\n  feng01               idx=  96 string=5 position= 7.90 degree=3 range=2 resid=+2.13\n  guan01               idx=  34 string=7 position= 7.00 degree=1 range=3 resid=-3.00\n  jiou02               idx=   4 string=6 position= 7.00 degree=3 range=2 resid=+3.00\n  jiou02               idx=   5 string=6 position= 9.00 degree=5 range=3 resid=-4.98\n  liang01              idx=  78 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  liang01              idx=  80 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  liang01              idx=  82 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  liang02              idx=   2 string=7 position= 9.00 degree=2 range=2 resid=+2.02\n  liang02              idx=  15 string=7 position= 9.00 degree=2 range=2 resid=+2.02\n  liang02              idx=  58 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  liang02              idx=  60 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  liang02              idx=  62 string=3 position=10.00 degree=3 range=1 resid=+0.98\n  siang01              idx=  48 string=6 position=10.90 degree=5 range=2 resid=-3.03\n  siang01              idx=  58 string=5 position=10.90 degree=3 range=2 resid=-3.03\n  siang01              idx=  63 string=5 position=10.90 degree=2 range=2 resid=-1.03\n  siang01              idx=  64 string=5 position=10.90 degree=3 range=2 resid=-3.03\n  siang01              idx=  76 string=6 position=10.90 degree=5 range=2 resid=-3.03\n  siang01              idx= 107 string=6 position=10.90 degree=5 range=2 resid=-3.03\n  siang01              idx= 117 string=5 position=10.90 degree=3 range=2 resid=-3.03\n  siang02              idx=  21 string=6 position=10.90 degree=5 range=2 resid=-3.03\n  siang02              idx=  71 string=6 position=10.90 degree=5 range=2 resid=-3.03\n  siang02              idx=  81 string=5 position=10.90 degree=3 range=2 resid=-3.03\n  yang01               idx=  12 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yang01               idx=  13 string=5 position= 7.90 degree=6 range=2 resid=-0.86\n  yang01               idx=  14 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yang01               idx=  21 string=4 position=10.90 degree=2 range=2 resid=-1.03\n  yang01               idx=  22 string=4 position=10.90 degree=3 range=2 resid=-3.03\n  yang01               idx=  52 string=6 position=10.90 degree=6 range=2 resid=-3.03\n  yang02               idx=  19 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang02               idx=  20 string=5 position= 6.40 degree=2 range=3 resid=-0.79\n  yang02               idx=  21 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang02               idx=  32 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang02               idx=  68 string=6 position=10.90 degree=6 range=2 resid=-3.03\n  yang03               idx=  19 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang03               idx=  20 string=5 position= 6.40 degree=2 range=3 resid=-0.79\n  yang03               idx=  21 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang03               idx=  32 string=5 position= 7.00 degree=1 range=2 resid=+11.00\n  yang03               idx=  55 string=6 position=10.90 degree=6 range=2 resid=-3.03\n  yang03               idx=  58 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yang03               idx=  62 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yang03               idx=  66 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yi01                 idx=  34 string=4 position= 8.70 degree=3 range=2 resid=-1.45\n  yi01                 idx=  35 string=4 position= 8.70 degree=5 range=2 resid=-4.45\n  yi01                 idx=  47 string=6 position= 8.70 degree=6 range=2 resid=-1.45\n  yi01                 idx=  48 string=6 position= 8.70 degree=1 range=3 resid=-4.45\n  yi01                 idx=  51 string=4 position= 7.80 degree=5 range=2 resid=-2.57\n  yi01                 idx=  53 string=1 position= 8.70 degree=6 range=1 resid=-1.45\n  yi01                 idx=  54 string=1 position= 8.70 degree=1 range=2 resid=-4.45\n  yi01                 idx=  62 string=4 position= 8.70 degree=3 range=2 resid=-1.45\n  yi01                 idx=  63 string=4 position= 8.70 degree=5 range=2 resid=-4.45\n  yi01                 idx=  73 string=6 position= 8.70 degree=6 range=2 resid=-1.45\n  yi01                 idx=  74 string=6 position= 8.70 degree=1 range=3 resid=-4.45\n  yi01                 idx=  75 string=4 position= 7.80 degree=5 range=2 resid=-2.57\n  yi01                 idx=  77 string=1 position= 8.70 degree=6 range=1 resid=-1.45\n  yi01                 idx=  78 string=1 position= 8.70 degree=1 range=2 resid=-4.45\n  yi01                 idx=  86 string=4 position= 7.80 degree=5 range=2 resid=-2.57\n  yi01                 idx=  88 string=1 position= 8.70 degree=6 range=1 resid=-1.45\n  yi01                 idx=  89 string=1 position= 8.70 degree=1 range=2 resid=-4.45\n  yi01                 idx= 108 string=6 position= 8.70 degree=6 range=2 resid=-1.45\n  yi01                 idx= 109 string=6 position= 8.70 degree=1 range=3 resid=-4.45\n  yi01                 idx= 111 string=4 position= 8.00 degree=4 range=2 resid=-1.16\n  yi01                 idx= 113 string=4 position= 8.00 degree=4 range=2 resid=-1.16\n  yi01                 idx= 114 string=3 position= 8.70 degree=2 range=2 resid=-1.45\n  yi01                 idx= 115 string=3 position= 8.70 degree=4 range=2 resid=-4.45\n  yi01                 idx= 116 string=4 position= 7.80 degree=5 range=2 resid=-2.57\n  yi01                 idx= 119 string=3 position= 7.80 degree=4 range=2 resid=-2.57\n  yi01                 idx= 120 string=2 position= 7.80 degree=2 range=2 resid=-2.57\n  yi01                 idx= 122 string=1 position= 8.70 degree=6 range=1 resid=-1.45\n  yi01                 idx= 123 string=1 position= 8.70 degree=1 range=2 resid=-4.45\n  yi01                 idx= 125 string=2 position= 8.00 degree=1 range=2 resid=-1.16\n  yi01                 idx= 127 string=2 position= 8.00 degree=1 range=2 resid=-1.16\n  yi03                 idx=   2 string=7 position= 5.00 degree=5 range=3 resid=+2.02\n  yi04                 idx=  56 string=4 position= 9.00 degree=5 range=1 resid=+7.02\n  yi04                 idx=  59 string=4 position= 9.00 degree=5 range=1 resid=+7.02\n  yi04                 idx=  73 string=4 position= 8.00 degree=4 range=2 resid=-1.16\n  yi05                 idx=  36 string=4 position= 9.00 degree=5 range=1 resid=+7.02\n  yi05                 idx=  39 string=4 position= 9.00 degree=5 range=1 resid=+7.02\n  yi06                 idx=  15 string=5 position=10.12 degree=1 range=2 resid=+1.84\n  yi06                 idx=  19 string=5 position=10.12 degree=1 range=2 resid=+1.84\n  yi06                 idx=  25 string=2 position=10.90 degree=5 range=1 resid=-1.03\n  yi07_modulation      idx=  21 string=2 position=10.12 degree=1 range=1 resid=+1.84\n  yi07_originalmode    idx=  21 string=2 position=10.12 degree=4 range=1 resid=+1.84\n  yu02                 idx=   5 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu02                 idx=   6 string=5 position= 7.90 degree=6 range=2 resid=-0.86\n  yu02                 idx=  21 string=5 position=10.90 degree=3 range=2 resid=-13.03\n  yu03                 idx=  10 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu03                 idx=  11 string=5 position= 7.90 degree=6 range=2 resid=-0.86\n  yu03                 idx=  35 string=5 position=10.90 degree=3 range=2 resid=-1.03\n  yu03                 idx=  40 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu03                 idx=  41 string=5 position= 7.90 degree=6 range=2 resid=-0.86\n  yu03                 idx=  42 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu03                 idx=  51 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu03                 idx=  52 string=5 position= 7.90 degree=6 range=2 resid=-0.86\n  yu03                 idx=  53 string=5 position= 9.00 degree=5 range=2 resid=-0.98\n  yu03                 idx=  69 string=5 position=10.90 degree=3 range=2 resid=-1.03\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "4f80da4918d3b9b2b714ebdbe6f4aa70",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-residual-by-degree-across-the-cleaned-set\">Manual review: residual by degree, across the cleaned set</h2>\n<span class=\"paragraph\">Uses the already-corrected <code>residual</code> column (correct K and\nbest-fit convention baked in per piece), so a nonzero mean here\nfor one degree across many pieces is a signal of a systematic\nphysics-layer issue (e.g. <code>DEGREE_SEMITONES</code> or a just-intonation\nratio in <code>theory.py</code>) \u2014 not per-piece K/convention noise.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "841398e464140448dc8ce86db4963510",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  degree=1: mean=+1.600  n=284\n  degree=2: mean=-0.026  n=216\n  degree=3: mean=-0.224  n=194\n  degree=4: mean=-0.638  n=15\n  degree=5: mean=-0.062  n=261\n  degree=6: mean=-0.141  n=236\n  degree=7: mean=-0.176  n=2\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "b0fc7f2a62f32057da992a41fc940e3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-per-piece-residual-by-degree\">Manual review: per-piece residual by degree</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "eeda8651f7e630cc018d359d1e69eba7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "180424781bb3784f3e2e2b67de4a3daa",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "piece=yi01  convention=at1  K=-12\n  string=4 position= 8.70 degree=3 range=2 resid=-1.45 status=outlier\n  string=4 position= 8.70 degree=5 range=2 resid=-4.45 status=outlier\n  string=6 position= 8.70 degree=6 range=2 resid=-1.45 status=outlier\n  string=6 position= 8.70 degree=1 range=3 resid=-4.45 status=outlier\n  string=4 position= 7.80 degree=5 range=2 resid=-2.57 status=outlier\n  string=1 position= 8.70 degree=6 range=1 resid=-1.45 status=outlier\n  string=1 position= 8.70 degree=1 range=2 resid=-4.45 status=outlier\n  string=4 position= 8.70 degree=3 range=2 resid=-1.45 status=outlier\n  string=4 position= 8.70 degree=5 range=2 resid=-4.45 status=outlier\n  string=6 position= 8.70 degree=6 range=2 resid=-1.45 status=outlier\n  string=6 position= 8.70 degree=1 range=3 resid=-4.45 status=outlier\n  string=4 position= 7.80 degree=5 range=2 resid=-2.57 status=outlier\n  string=1 position= 8.70 degree=6 range=1 resid=-1.45 status=outlier\n  string=1 position= 8.70 degree=1 range=2 resid=-4.45 status=outlier\n  string=4 position= 7.80 degree=5 range=2 resid=-2.57 status=outlier\n  string=1 position= 8.70 degree=6 range=1 resid=-1.45 status=outlier\n  string=1 position= 8.70 degree=1 range=2 resid=-4.45 status=outlier\n  string=6 position= 8.70 degree=6 range=2 resid=-1.45 status=outlier\n  string=6 position= 8.70 degree=1 range=3 resid=-4.45 status=outlier\n  string=4 position= 8.00 degree=4 range=2 resid=-1.16 status=outlier\n  string=4 position= 8.00 degree=4 range=2 resid=-1.16 status=outlier\n  string=3 position= 8.70 degree=2 range=2 resid=-1.45 status=outlier\n  string=3 position= 8.70 degree=4 range=2 resid=-4.45 status=outlier\n  string=4 position= 7.80 degree=5 range=2 resid=-2.57 status=outlier\n  string=3 position= 7.80 degree=4 range=2 resid=-2.57 status=outlier\n  string=2 position= 7.80 degree=2 range=2 resid=-2.57 status=outlier\n  string=1 position= 8.70 degree=6 range=1 resid=-1.45 status=outlier\n  string=1 position= 8.70 degree=1 range=2 resid=-4.45 status=outlier\n  string=2 position= 8.00 degree=1 range=2 resid=-1.16 status=outlier\n  string=2 position= 8.00 degree=1 range=2 resid=-1.16 status=outlier\n--- summary by degree ---\n  degree=1: mean=-2.11  n=17\n  degree=2: mean=-0.23  n=17\n  degree=3: mean=-0.26  n=9\n  degree=4: mean=-1.24  n=8\n  degree=5: mean=-2.13  n=9\n  degree=6: mean=-0.57  n=20\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}

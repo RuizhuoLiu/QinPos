@@ -1,0 +1,231 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "ZHCJ",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "81a2e71588b2c9cb4ebaee110b13bd70",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"validate-the-physics-layer-against-gq39-expert-annotations\">Validate the physics layer against GQ39 expert annotations</h1>\n<span class=\"paragraph\">Checks whether the string-length-ratio hui/position model (<code>qinpos.theory</code>) agrees with GQ39's note-by-note (degree, string,\nposition) annotations, after accounting for each piece's gong offset K and range-boundary convention.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "28742237114087d68ba223d01a154ffe",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "26b1af951d58d4018c6c90afda9d927f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a09c9ea4bd9235d7c404031d33ea67b1",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "/home/s5523505/Desktop/SEM/MasterProject/QinPos/data/GQ39/score_annotation True\nloaded 2410 events\n1208 stopped notes\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "PKri",
+      "code_hash": "e8b499bb08d1bcc30ba8f4174f79c5e8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"overall-agreement-convention-at1\">Overall agreement (convention = \"at1\")</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "8a53da2c4f22ad23e588e2a2e3fc9c83",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "38f1602f8fde1437d792ed433135d7cc",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "c98cc6149bb4a1631034f426b5a57184",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "ciou01               n= 60  offset= -11.98  agree=85.0%\nfeng01               n= 75  offset= -11.98  agree=90.7%\ngu01                 n= 51  offset= -11.98  agree=98.0%\nguan01               n= 33  offset=  -7.00  agree=63.6%\nguan02               n= 20  offset=  -7.00  agree=75.0%\nguan03               n=  9  offset=  -7.02  agree=55.6%\njiou01               n= 34  offset=  -7.02  agree=58.8%\njiou02               n= 31  offset=  -7.02  agree=54.8%\njiou03               n= 30  offset=  -7.02  agree=80.0%\njiou04               n= 86  offset=  -7.02  agree=65.1%\njiou05               n= 23  offset=  -7.02  agree=52.2%\nliang01              n= 60  offset=  -7.00  agree=60.0%\nliang02              n= 51  offset=  -7.00  agree=58.8%\nliang03              n=  3  offset=  -6.98  agree=100.0%\nsiang01              n= 45  offset= -11.98  agree=84.4%\nsiang02              n= 32  offset= -11.98  agree=90.6%\nyang01               n= 38  offset= -13.98  agree=71.1%\nyang02               n= 59  offset= -13.98  agree=78.0%\nyang03               n= 76  offset= -13.98  agree=73.7%\nyi01                 n= 80  offset= -12.18  agree=57.5%\nyi02                 n= 44  offset= -12.18  agree=100.0%\nyi03                 n= 38  offset= -12.17  agree=97.4%\nyi04                 n= 46  offset= -12.00  agree=93.5%\nyi05                 n= 52  offset= -12.00  agree=96.2%\nyi06                 n= 27  offset= -12.18  agree=88.9%\nyi07_modulation      n= 17  offset=  -7.02  agree=76.5%\nyi07_originalmode    n= 17  offset= -12.02  agree=94.1%\nyu02                 n= 20  offset= -13.98  agree=55.0%\nyu03                 n= 51  offset= -13.98  agree=54.9%\n\nOVERALL: 916/1208 = 75.8%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "611b6c5581d4e0de84a0f39159b9eae5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"per-degree-residual-breakdown-for-one-piece\">Per-degree residual breakdown for one piece</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "075baaf32deea46e91e01af2635de946",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "6b84acae3200d6fdba5f8019fe391609",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  string=5 position=10.00 degree=6 resid=-12.00\n  string=5 position=10.00 degree=6 resid=-12.00\n  string=5 position=10.00 degree=6 resid=-12.00\n  string=5 position=10.00 degree=6 resid=-12.00\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 7.00 degree=5 resid=-11.98\n  string=6 position= 6.40 degree=6 resid=-11.77\n  string=6 position= 6.40 degree=6 resid=-11.77\n  string=6 position= 6.40 degree=6 resid=-11.77\n--- summary by degree ---\n  degree=1: mean=+0.04  n=11\n  degree=2: mean=+0.04  n=4\n  degree=3: mean=+0.11  n=5\n  degree=5: mean=-11.98  n=7\n  degree=6: mean=-11.90  n=7\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "emfo",
+      "code_hash": "e556ef3e70efb8773d2e57006bff351c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"convention-offset-diagnostic-across-all-pieces\">Convention + offset diagnostic across all pieces</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "175e43e4d2aa60db8e354ddf7b24d289",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "28e535a85175fb2698b8347bf9ebb762",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ueHc",
+      "code_hash": null,
+      "outputs": [],
+      "console": []
+    }
+  ]
+}

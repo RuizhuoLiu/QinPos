@@ -11,19 +11,6 @@ Messy realities handled:
       comma into a decimal point on integer columns). Exploded here
       into simultaneous events sharing an onset.
     * `position` mixes float / str / 0 (open).
-    * `position` can ALSO be a packed pair where Excel collapsed a
-      comma the same way, but hui values run 1-13 (two digits for
-      10-13), so a packed pair like "10,12" collapses to the float
-      10.12 — naively reading only the first digit after the decimal
-      point recovers (10, 1), silently dropping the second digit of
-      "12". We try both a one-digit and a two-digit reading and keep
-      whichever falls inside the physically playable hui range.
-    * A row's packed fields (degree/range/string/position) can
-      disagree in how many values they hold (e.g. 3 degrees packed
-      but only 2 positions given). There is no reliable way to infer
-      the missing value, so these rows are skipped with a printed
-      warning rather than silently padded by repeating the last
-      value, which would fabricate a note that isn't in the source.
     * Legend text in trailing columns is ignored.
 """
 
@@ -36,18 +23,6 @@ import pandas as pd
 
 TIMBRE = {1: "harmonic", 2: "open", 3: "stopped"}
 KEEP = ["degree", "range", "onset", "string", "position", "L tech (timbre)"]
-
-# Practical playable hui range (matches candidates.py's
-# STOPPED_MIN_HUI/STOPPED_MAX_HUI): below hui ~2 the string is too
-# short/tense to stop cleanly, so a one-digit reading that lands below
-# this is almost certainly the wrong half of a packed position pair.
-MIN_HUI = 2.0
-MAX_HUI = 13.9
-
-
-class PackedLengthMismatch(ValueError):
-    """Raised when a row's packed fields imply different note counts
-    and there's no safe way to reconcile them (see module docstring)."""
 
 
 @dataclass
@@ -93,27 +68,6 @@ def _values(cell, integer_column: bool) -> list[float]:
     return [v]
 
 
-def _split_packed_position(v: float) -> tuple[float, float]:
-    """Reconstruct a packed position pair from a single collapsed float.
-
-    The second packed value may have been a one-digit fen (e.g. 8.7 ->
-    8, 7) or a two-digit hui (e.g. 10.12 -> 10, 12) — both look like
-    "take the decimal part" but need different scaling. We try both
-    and prefer whichever lands inside the playable hui range; if both
-    or neither do, we fall back to the one-digit reading (matches
-    prior behaviour, and is the far more common case in practice).
-    """
-    a = int(v)
-    frac = v - a
-    one_digit = round(frac * 10)
-    two_digit = round(frac * 100)
-    two_digit_valid = MIN_HUI <= two_digit <= MAX_HUI
-    one_digit_valid = MIN_HUI <= one_digit <= MAX_HUI
-    if two_digit_valid and not one_digit_valid:
-        return float(a), float(two_digit)
-    return float(a), float(one_digit)
-
-
 def _explode(row) -> list[tuple]:
     degrees = _values(row["degree"], True)
     ranges = _values(row["range"], True)
@@ -137,28 +91,13 @@ def _explode(row) -> list[tuple]:
     # cleaning stage can double-check them against the physics.
     suspect = False
     if n > 1 and len(positions) == 1 and positions[0] != int(positions[0]):
-        positions = list(_split_packed_position(positions[0]))
+        v = positions[0]
+        a = int(v)
+        rest = round((v - a) * 10)
+        positions = [float(a), float(rest)]
         suspect = True
 
     n = max(n, len(positions))
-
-    # Length-consistency check: any field with more than one packed
-    # value must agree on the note count. A field with exactly one
-    # value is fine (it's shared/broadcast across all notes — e.g. a
-    # chord on one onset with a single shared timbre code). But two
-    # fields that both packed >1 value and disagree (e.g. 3 degrees
-    # against 2 positions) mean the row itself is ambiguous — padding
-    # by repeating the last value would fabricate a note not present
-    # in the source, so we refuse to guess.
-    lengths = {"degree": len(degrees), "range": len(ranges),
-               "string": len(strings), "position": len(positions)}
-    packed_lengths = {name: l for name, l in lengths.items() if l > 1}
-    if packed_lengths and len(set(packed_lengths.values())) > 1:
-        raise PackedLengthMismatch(
-            f"inconsistent packed field lengths {lengths} "
-            f"(degree={row['degree']!r} range={row['range']!r} "
-            f"string={row['string']!r} position={row['position']!r})"
-        )
 
     def pad(lst):
         return lst + [lst[-1]] * (n - len(lst))
@@ -181,9 +120,6 @@ def load_piece(path: Path) -> list[Event]:
         for _, row in rows.iterrows():
             try:
                 parts = _explode(row)
-            except PackedLengthMismatch as exc:
-                print(f"[{path.stem}/{sheet_name}] skipping row: {exc}")
-                continue
             except (ValueError, TypeError):
                 continue  # legend junk that slipped through
             onset = float(row["onset"]) if not pd.isna(row["onset"]) else -1.0
