@@ -253,7 +253,7 @@ def _(rows):
         return suspect
 
     suspect_rows = print_suspect_rows(rows)
-    return (suspect_rows,)
+    return
 
 
 @app.cell(hide_code=True)
