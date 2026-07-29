@@ -105,7 +105,7 @@ def stopped_position(string: int, target_semitones: float) -> float | None:
     return lambda_to_huifen(stopped_lambda(interval))
 
 
-def harmonic_positions(string: int, target_semitones: float, tol: float = 0.5) -> list[float]:
+def harmonic_positions(string: int, target_semitones: float, tol: float = 0.9) -> list[float]:
     """All hui where a harmonic (泛音) on `string` matches the target pitch within `tol` semitones."""
     interval = target_semitones - OPEN_STRING_SEMITONES[string]
     return [float(h) for h, s in HARMONIC_SEMITONES_AT_HUI.items() if abs(s - interval) <= tol]
@@ -134,6 +134,8 @@ class Candidate:
             return f"散(open){self.string}弦(string)"
         h = int(self.position)
         f = round((self.position - h) * 10)
+        if f == 10:  # snap 9徽10分 - 10徽
+            h, f = h + 1, 0
         fen = f"{f}分(fen)" if f else ""
         prefix = "泛(harmonic)" if self.kind == "harmonic" else ""
         return f"{prefix}{h}徽(hui){fen}{self.string}弦(string)"

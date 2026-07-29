@@ -17,7 +17,7 @@ from .theory import OPEN_STRING_SEMITONES, Candidate, Note, harmonic_positions, 
 STOPPED_MIN_HUI = 2.0
 STOPPED_MAX_HUI = 13.9
 
-PITCH_TOL = 0.6  # semitone tolerance when matching open/harmonic pitches
+OPEN_PITCH_TOL = 0.6  # open strings are exact; this only absorbs annotation noise
 
 
 def candidates_for(note: Note) -> list[Candidate]:
@@ -26,7 +26,7 @@ def candidates_for(note: Note) -> list[Candidate]:
         interval = note.semitones - OPEN_STRING_SEMITONES[s]
 
         # open string (散音)
-        if abs(interval) <= PITCH_TOL and note.is_harmonic is not True:
+        if abs(interval) <= OPEN_PITCH_TOL and note.is_harmonic is not True:
             out.append(Candidate(s, 0.0, "open"))
 
         # stopped (按音)
@@ -37,6 +37,6 @@ def candidates_for(note: Note) -> list[Candidate]:
 
         # harmonic (泛音)
         if note.is_harmonic is not False:
-            for h in harmonic_positions(s, note.semitones, PITCH_TOL):
+            for h in harmonic_positions(s, note.semitones):
                 out.append(Candidate(s, h, "harmonic"))
     return out
