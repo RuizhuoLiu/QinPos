@@ -1,0 +1,159 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "krSv",
+      "code_hash": "90175d2e462980a0a53f6615a65d523a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"viterbi-string-choice-vs-gq39-experts\">Viterbi string choice vs GQ39 experts</h1>\n<span class=\"paragraph\">Decodes every piece's stopped-note melody with\n<code>qinpos.viterbi.decode</code> and measures how often the predicted\nstring matches the expert annotation (from <code>data/gq39_clean.csv</code>,\nclean + repaired rows only).</span>\n<span class=\"paragraph\"><strong>Fairness</strong>: input pitch is reconstructed from the <em>notation</em>\n(degree/range/K, i.e. <code>physical - corrected residual</code>), never\nfrom the expert's physical position directly, so the decoder\nreceives exactly what a real user would provide.</span>\n<span class=\"paragraph\"><strong>Known caveat (v0)</strong>: the cleaned CSV contains stopped notes\nonly, so consecutive notes in a sequence may not be adjacent in\nthe actual piece (open/harmonic notes in between are skipped).\nThis dilutes genuine sequential signal and under-serves the arc\nfeatures; the Phase 3 evaluation should rebuild full sequences\nfrom the loader with timbre constraints.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "2c2382db8ada8d345276f2e7602b2c33",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "4a324e57b0243321c0a22af7870d00f0",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "'outlier'",
+          "traceback": null
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/tmp/marimo_1785374/__marimo__cell_bkHC_.py&quot;</span>, line <span class=\"m\">2</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"k\">if</span> <span class=\"n\">r</span><span class=\"p\">[</span><span class=\"s2\">&quot;outlier&quot;</span><span class=\"p\">]</span> <span class=\"o\">==</span> <span class=\"s2\">&quot;False&quot;</span><span class=\"p\">]</span>\n<span class=\"w\">       </span><span class=\"pm\">~^^^^^^^^^^^</span>\n<span class=\"gr\">KeyError</span>: <span class=\"n\">&#39;outlier&#39;</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "845b90b4fe3e2cbb806fd027aff67597",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"baselines\">Baselines</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "668d79ee2005c8f6cb39cd379078fdd5",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (KeyError): ",
+          "traceback": null
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "dcfa4f8bf50b58793c2748f72f6fa71f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"viterbi-path-a-hand-crafted-weights\">Viterbi (Path A hand-crafted weights)</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "4142bb4639f4d8350cb2ce8231a86635",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (KeyError): ",
+          "traceback": null
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "542712af847756be2314333342a01153",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (KeyError): ",
+          "traceback": null
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "9723e18691873e9654fd479f58ebab1e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"coarse-weight-grid\">Coarse weight grid</h2>\n<span class=\"paragraph\">A small grid over the three most influential weights. NOTE: this\ntunes on the full dataset (no train/test split), so treat the\nbest number as an optimistic Path-A ceiling, not a final result \u2014\nproper fitting with held-out pieces is exactly Phase 3's job.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "f4f59a1958875dfdfe684acfe4f65aa7",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (KeyError): ",
+          "traceback": null
+        }
+      ],
+      "console": []
+    }
+  ]
+}

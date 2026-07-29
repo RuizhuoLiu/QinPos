@@ -1,0 +1,222 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "f0c5ce15a2b4b1ece0237e586db368aa",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"clean-the-gq39-stopped-note-annotations-into-a-reliable-training-set\">Clean the GQ39 stopped-note annotations into a reliable training set</h1>\n<ol>\n<li><strong>Per-piece gong offset K</strong>: each piece's jianpu \"1\" sits at a fixed integer semitone offset from open string 1.</li>\n</ol>\n<span class=\"paragraph\">e.g. -7 = gong at open string 4's pitch class, -12 = gong at string 1's.</span>\n<span class=\"paragraph\">K is estimated as the rounded median of (physical - notated) over the piece.</span>\n<ol start=\"2\">\n<li><strong>Range-boundary convention differs per piece</strong>:<ul>\n<li>convention \"at1\" (original default): the range digit increments at degree 1 (strict octave arithmetic). (1-7)</li>\n<li>convention \"at5\": degrees 5, 6, 7 are labelled with the range of the octave they LEAD INTO, i.e. their physical octave is (annotated range - 1). This matches how qin players group the scale as 5,6,1,2,3 (the tuning sequence) rather than 1-7.</li>\n</ul>\n</li>\n</ol>\n<span class=\"paragraph\">Empirically, all K=-7 pieces (guan/jiou/liang, and yi07's modulated section) use \"at5\"; the rest use \"at1\". We select per piece by best fit rather than hard-coding the correlation.</span>\n<span class=\"paragraph\">(jiou04 agreement 56/86 under at1 -&gt; 86/86 under at5; yi07_modulation prefers at5 while yi07_originalmode prefers at1 \u2014 same piece, same annotator, convention follows the gong reading.)</span>\n<ol start=\"3\">\n<li>**Altered physical tuning (\u7d27\u4e94\u5f26) is out of scope. But a handful of pieces retune a string's actual physical pitch (e.g. \u7d27\u4e94\u5f26), which K/convention cannot correct, since K is a single constant per piece and can't shift one string differently from the rest. These pieces are excluded up front, before fitting, rather than left to fall out as per-note outliers \u2014 confirmed pieces: <code>EXCLUDED_TUNING_PIECES</code> below.</li>\n<li><strong>Loader-level ambiguity (<code>suspect</code>)</strong>: some cells pack multiple notes as a comma-separated list, but Excel silently turned that comma into a decimal point on integer columns (<code>degree</code>, <code>range</code>, <code>string</code>), and/or the <code>position</code> cell arrived as a single fractional value even though the row holds &gt;1 note. <code>dataset_gq39.py</code> reconstructs these, and when it has to <em>infer</em> a split for <code>position</code> from a physical necessity argument (two different degrees on the same string can't share a position) rather than reading an explicit comma, it marks that note <code>suspect=True</code>.</li>\n<li><strong>Alternate gong reading within one piece (<code>status=\"alt_gong\"</code>)</strong>: some pieces' score explicitly states a tuning-to-degree mapping that differs from the piece's dominant K for a handful of notes (e.g. \u61b6\u6545\u4eba's header states \"\u6b63\u8abf\u5b9a\u5f26 1 2 4 5 6 1 2\" \u2014 gong on string 1 \u2014 while most of the piece's notes fit better with gong on string 3). For any note that fails the piece's primary K, we test the integer K implied by that note's own residual; if that alternate K resolves it within tolerance, we keep the note (it's real signal, not noise) but tag it <code>status=\"alt_gong\"</code> with <code>K_used</code> recorded, distinct from the piece's primary <code>K</code>, so it's usable for training while remaining visible for a sanity check against the score.</li>\n<li>After convention/K resolution, remaining exact \u00b11-octave residuals are isolated range typos: repaired by adjusting range, and marked <code>status=\"repaired\"</code> so downstream users can exclude them if wanted.</li>\n<li>Anything still off by &gt;0.6 semitones (under both the primary and any alternate K) is flagged <code>status=\"outlier\"</code> and excluded from the clean set (candidates: chuo/zhu ornament pitches annotated at slide targets, genuine typos, or an unmarked mid-piece \u501f\u8c03 not reflected in <code>section</code> \u2014 future work).</li>\n</ol>\n<span class=\"paragraph\">Output: <code>data/gq39_clean.csv</code> with one row per stopped note.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "c3870cb69147cb4f47d8284cf2c7b2c4",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a6b6863923745764ccd69828e27f6a4f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "c7c6666b3da98a1dde9eaea8d2d12489",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "a0cc73e12a0ee698b8d73074ce698e5f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "e7e9fa2cd04978ea1baeeb064a2ab09b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"load-and-classify-every-stopped-note\">Load and classify every stopped note</h2>\n<span class=\"paragraph\">Altered-tuning pieces are dropped here, before any K/convention\nfitting happens, so they never influence a fit and never show up\nas false outliers.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "fce9941302e02ae631f2c1a98ccaaa2f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "df79df11c6c3657fe63b1f89a40675b2",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "dee6a71a75511fe462d3d024b2d9ac61",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"write-the-cleaned-csv\">Write the cleaned CSV</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "d7559e3a5300fa95004a2203ca0a4a20",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "41bfb732c47d7e38e0199ef4b8e8f813",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-alt_gong-notes-alternate-gong-reading-within-a-piece\">Manual review: alt_gong notes (alternate gong reading within a piece)</h2>\n<span class=\"paragraph\">Kept and usable for training, but worth a quick sanity check: does\n<code>K_used</code> correspond to a plausible gong-string reading (compare\nagainst <code>-OPEN_STRING_SEMITONES[s]</code> for some string s), and does\nthe score itself (header tuning notation, or a mode change) support\na second reading at this point in the piece?</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "79cd32cd1b398561c292797513027eca",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "4426f8d7af0dc6099182b45a450ebbbd",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-suspect-notes-loader-inferred-position-split\">Manual review: suspect notes (loader-inferred position split)</h2>\n<span class=\"paragraph\">These passed the residual check (mostly <code>status=\"clean\"</code>), but their\n<code>position</code> was reconstructed by the loader from a packed cell rather\nthan read directly \u2014 see point 4 above. Worth a first-pass spot\ncheck against the score, since the split relies on a physical\nargument (same string, different degree implies different position)\nrather than an explicit comma in the source file.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "e7b31223294331e74f17ccc7d1ba3951",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "73b9fdb22102708ede9e4d140439cddf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-outlier-notes\">Manual review: outlier notes</h2>\n<span class=\"paragraph\">These are excluded from the clean set. Worth checking against the\noriginal score for chuo/zhu slide ornaments (annotated at the\nslide target rather than the starting pitch), genuine typos, or an\nunmarked mid-piece \u501f\u8c03 that a single per-piece K can't absorb\n(compare <code>section</code> values across the flagged rows for a piece).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "f5620d9a52f7f9c9ba4e32d356a17725",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "abd1b87023b09bf9a4e2e65bd37e006c",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "645f3220356708cb9ba59e9a5b74402b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-same-piece-string-position-mapped-to-multiple-degrees\">Manual review: same (piece, string, position) mapped to multiple degrees</h2>\n<span class=\"paragraph\">Re-run against the corrected loader's <code>stopped</code> list. Cases that\nwere purely a loader parsing artifact (same string, degrees that\nare one scale-step apart, position now correctly split) should\nhave dropped out already. What remains here is the set worth\nchecking with a performer for genuine chuo/zhu/yin/nao ornaments.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "e0369848170f90306d76c097a8af30cf",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "4b2419add480747874ba32cabe52f039",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-residual-by-degree-across-the-cleaned-set\">Manual review: residual by degree, across the cleaned set</h2>\n<span class=\"paragraph\">Uses the already-corrected <code>residual</code> column (correct K/K_used and\nbest-fit convention baked in per piece), so a nonzero mean here\nfor one degree across many pieces is a signal of a systematic\nphysics-layer issue (e.g. <code>DEGREE_SEMITONES</code> or a just-intonation\nratio in <code>theory.py</code>) \u2014 not per-piece K/convention noise.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "6c3966836f90138ea8f7fb5a7d0c33f6",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "162696f22eaebc6ff3f93343a166d7a5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-per-piece-residual-by-degree-and-by-section\">Manual review: per-piece residual by degree, and by section</h2>\n<span class=\"paragraph\">Change <code>TARGET_PIECE</code> to inspect a different piece. The by-section\nbreakdown matters for pieces like yi01/03/04/05/06 (\u501f\u8c03, not\naltered tuning, so still in scope) \u2014 if the outlier rows above\ncluster in one <code>section</code>, that section likely needs its own K\nrather than sharing the whole piece's single fitted K.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "075baaf32deea46e91e01af2635de946",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "d2a95e97bb7fcb8e288c1fa6885e9133",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}
