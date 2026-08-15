@@ -1,0 +1,478 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "3b8d4b2d8b6cab32ad25bd7fc87a3df0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"phase-3-perceptron-weight-learning-style-control\">Phase 3: perceptron weight learning + style control</h1>\n<span class=\"paragraph\">Trains the decoder's cost weights from GQ39 expert paths with an\naveraged structured perceptron, on full sequences with free timbre\nchoice. Split is by piece, never by note, to avoid leakage.</span>\n<span class=\"paragraph\">The bar is section 3: a context-free pitch lookup table. A sequence\nmodel scoring below it is not using context at all.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "596fa5ba22c161b1a6ddbd329d5974cf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "9317ab8aa3b2b0783881cf0342a45e0c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"1-loader-sanity-does-sorting-on-idx-preserve-order\">1. Loader sanity: does sorting on idx preserve order?</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "5c0ccda3db5c195a39b0a46482a64756",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "[gu01/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 3, 'string': 2, 'position': 2} (degree=1.6 range='2,1,1' string=2.2 position='7.6,9')\n[guan01/section1] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 3, 'position': 2} (degree='1,1,6' range='1,3,3' string='3,7,7' position='6.2,7')\n[jiou02/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 2, 'string': 2, 'position': 3} (degree=3.5 range=2.3 string=6.6 position='7.,9,7')\n[yu03/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 2, 'position': 3} (degree='5,5,6' range='1,2,2' string=3.5 position='0,9,7.9')\n32 pieces, 32 (piece, section) groups\n0 piece(s) with more than one section\n  -> one section per piece; sorting by idx alone is safe\nidx contiguous within every group\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "PKri",
+      "code_hash": "4e97dd25524d0b1d1965c0f7c23aed39",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "[gu01/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 3, 'string': 2, 'position': 2} (degree=1.6 range='2,1,1' string=2.2 position='7.6,9')\n[guan01/section1] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 3, 'position': 2} (degree='1,1,6' range='1,3,3' string='3,7,7' position='6.2,7')\n[jiou02/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 2, 'string': 2, 'position': 3} (degree=3.5 range=2.3 string=6.6 position='7.,9,7')\n[yu03/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 2, 'position': 3} (degree='5,5,6' range='1,2,2' string=3.5 position='0,9,7.9')\n24 pieces, 1774 notes, 1719 scored\ntrain: 18 pieces   test: ['ciou01', 'guan02', 'jiou03', 'liang02', 'yi01', 'yi05']\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Xref",
+      "code_hash": "fdd4558b8e9fa75b52d2f5c2232b98e7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-reachability\">2. Reachability</h2>\n<span class=\"paragraph\">Run with <code>scored_only=False</code>: unreachable notes there are an\nindependent check on the <code>needs_review</code> tier.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "a2300072a6c3098f78283e564cb15080",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "reachability (all notes)\n  stopped     957 /   977 =  98.0% reachable\n  open        498 /   512 =  97.3% reachable\n  harmonic    269 /   285 =  94.4% reachable\n  TOTAL      1724 /  1774 =  97.2%\n\nsnap distance among reachable notes (hui units)\n  stopped   n=  957  median 0.010  p90 0.070  p99 0.100  max 0.390\n  harmonic  n=  269  median 0.000  p90 0.000  p99 0.000  max 0.000\n\nunreachable breakdown\n  stopped     10 no candidate on that string,   10 position too far (closest 0.510, median 0.870)\n  open        14 no candidate on that string,    0 position too far\n  harmonic     6 no candidate on that string,   10 position too far (closest 3.000, median 3.000)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "6d03f273e9a542f1329496a366a7de3a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"3-context-free-baselines\">3. Context-free baselines</h2>\n<span class=\"paragraph\">Honest baseline: fit on train, score on test \u2014 the number to beat.\nOracle ceiling: fit and score on the same notes, so not a baseline;\nit bounds what any pitch-only mapping could reach (54.7%).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "28529fed6e7ffad1b841fd3482133d12",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "context-free lookup (fit on train, scored on test)\n  exact=45.5%  (n=433, 0 pitches unseen in training)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "f2a94fced17eb263b921ddec30f4d40f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<pre class='text-xs'>0.5473441108545035</pre>"
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "per-piece oracle ceiling (test pieces)\n  ciou01         ceiling    64/   96 =  66.7%\n  guan02         ceiling    17/   21 =  81.0%\n  jiou03         ceiling    38/   52 =  73.1%\n  liang02        ceiling    44/   64 =  68.8%\n  yi01           ceiling    73/  123 =  59.3%\n  yi05           ceiling    70/   77 =  90.9%\n\nCONTEXT-FREE CEILING (oracle): 237/433 = 54.7%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "emfo",
+      "code_hash": "18d170176c3a96f79050478efff7414f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-hand-crafted-weights-path-a-baseline\">4. Hand-crafted weights (Path A baseline)</h2>\n<span class=\"paragraph\"><code>Weights()</code> defaults from <code>viterbi.py</code>, set by domain knowledge.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "164cfc7188bc5f859385111b26216c33",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "hand-crafted (test, free choice)\n  kind=37.2%  string=33.5%  exact=23.3%  (n=433)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "8cdaf87736c21f8efaa0ec4b792f7a92",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"5-train-the-full-model\">5. Train the full model</h2>\n<span class=\"paragraph\">Then: lr sweep (does lr explain the arc penalty?), arc-scale sweep\n(is the optimum at zero?), and error clustering (do arc features\nturn isolated errors into runs?).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "34cd844a408cfec8ed285ca9c001ae3c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "saved /home/s5523505/Desktop/SEM/MasterProject/QinPos/data/learned_weights.json\n  is_open        -0.390\n  is_harmonic    +2.860\n  below_center   +1.957\n  above_center   +1.654\n  string_1       +3.799\n  string_2       +2.126\n  string_3       +0.210\n  string_4       -1.105\n  string_5       -0.711\n  string_6       -1.838\n  string_7       -2.481\n  sb_1_0         +1.200\n  sb_1_1         +1.736\n  sb_1_2         -1.683\n  sb_1_3         -2.600\n  sb_2_0         +1.256\n  sb_2_1         +0.906\n  sb_2_2         -1.292\n  sb_2_3         -0.428\n  sb_3_0         +2.002\n  sb_3_1         +0.108\n  sb_3_2         -0.712\n  sb_3_3         +6.677\n  sb_4_0         +3.784\n  sb_4_1         -0.658\n  sb_4_2         -0.066\n  sb_4_3         -0.442\n  sb_5_0         -1.220\n  sb_5_1         -0.549\n  sb_5_2         -2.969\n  sb_5_3         +1.596\n  sb_6_0         -2.263\n  sb_6_1         -1.768\n  sb_6_2         -2.010\n  sb_6_3         +0.446\n  sb_7_0         -4.121\n  sb_7_1         +0.308\n  sb_7_2         -0.345\n  sb_7_3         +0.339\n  next_reach_0   +0.935\n  next_reach_1_3 +0.284\n  next_reach_4_7 +1.193\n  next_reach_8p  -0.077\n  next_same_string -0.480\n  string_cross   +1.670\n  string_cross_harm +2.223\n  reposition     -1.511\n  travel_s_0     -3.525\n  travel_s_1_3   -1.584\n  travel_s_4_7   +4.423\n  travel_s_8p    +5.204\n  travel_h_0     +2.586\n  travel_h_1_3   -2.598\n  travel_h_4_7   +7.117\n  travel_h_8p    +6.168\n  harm_run       -4.945\n  harm_enter     +9.473\n  harm_exit      +9.076\n  open_run       -1.677\n  repeat_identical +3.390\n  same_hui_cross +0.412\n  same_hui_cross_harm -10.649\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "5cd2e50e34807ea4c0a45bec49dfa1ef",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "v4 full (test, free):   kind=65.8% string=47.3% exact=43.6%\nv4 full (test, timbre given): string=59.4% (0 notes lost the constraint)\nv4 full (train, free):  exact=55.8% (below test = underfitting, above test = overfitting)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "1cef89ae581384c098ecf22d68a9fa4f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "full model (arc + bands)\n       lr   train    test\n    0.200   54.7%   44.8%\n    0.050   55.8%   43.6%\n    0.010   55.2%   44.6%\n    0.002   57.9%   45.0%\nnode only (no arc)\n       lr   train    test\n    0.200   46.6%   47.8%\n    0.050   47.4%   48.3%\n    0.010   46.6%   47.8%\n    0.002   48.1%   48.5%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "62231f5a69849ed428a8c6cb016c7e1b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "   arc scale    kind  string   exact\n        1.00   65.8%   47.3%   43.6%\n        0.75   71.1%   49.2%   46.9%\n        0.50   68.1%   47.6%   44.6%\n        0.25   71.6%   45.5%   44.8%\n        0.10   71.4%   45.3%   45.0%\n        0.00   71.1%   46.0%   45.3%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "776f88aae5c1b435162d455f06e30c3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "error clustering (test)\n  node only              errors= 224 runs= 107 mean_len=2.09 longest=21\n  full (arc + bands)     errors= 244 runs=  79 mean_len=3.09 longest=26\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "19f1bd19afdf97ed481963afad8fa23d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"6-ablation-grid\">6. Ablation grid</h2>\n<span class=\"paragraph\">Every row retrains from scratch with the named features frozen at\nzero, so the survivors re-fit around the absence \u2014 unlike zeroing\nweights after training. Any row below the lookup table at the\nbottom is not earning its use of context.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "1e3862d5dd7cc4976b3c871878060ee9",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  configuration                 kind  string   exact   train\n  ------------------------------------------------------------\n  v4 full (arc + bands)       65.8%  47.3%  43.6%  55.8%\n  no arc (node only)          71.8%  51.7%  48.3%  47.4%\n  no bands (v3 node set)      68.4%  50.6%  47.1%  51.6%\n  no arc, no bands            73.7%  48.7%  45.3%  47.3%\n  ------------------------------------------------------------\n  context-free lookup             -      -  45.5%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "303f2b72403b95cfa8f8a7f0405dd42e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"7-did-the-per-string-biases-learn-anything-musical\">7. Did the per-string biases learn anything musical?</h2>\n<span class=\"paragraph\">A global weight ordering that mirrors the usage column is\nmemorising base rates; the band crossings exist to give\nregister-dependent preference instead. Compare the two columns.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "6421ea99da3c5699d48aa89f6fb1eb87",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  string            expert   global w   bands (low -> high hui)\n  string_1     101 ( 5.9%)     +3.799    +1.20  +1.74  -1.68  -2.60\n  string_2     102 ( 5.9%)     +2.126    +1.26  +0.91  -1.29  -0.43\n  string_3     232 (13.5%)     +0.210    +2.00  +0.11  -0.71  +6.68\n  string_4     288 (16.8%)     -1.105    +3.78  -0.66  -0.07  -0.44\n  string_5     253 (14.7%)     -0.711    -1.22  -0.55  -2.97  +1.60\n  string_6     406 (23.6%)     -1.838    -2.26  -1.77  -2.01  +0.45\n  string_7     337 (19.6%)     -2.481    -4.12  +0.31  -0.34  +0.34\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "7b9be1b8ef736dfc5743d043078c7753",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"8-style-control-preference-slider\">8. Style control: \u6563\u97f3/\u6cdb\u97f3 preference slider</h2>\n<span class=\"paragraph\">Negative bias = cheaper = more of that timbre.</span>\n<span class=\"paragraph\">Timbre mix and exact agreement move independently: matching the\nexpert's overall \u6309/\u6563/\u6cdb proportions says nothing about matching\nthem note by note.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "4d21b4787957ae22f4b8b48c6954e463",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='ZBYS-0' random-id='e016676b-f346-bab7-5d95-bc99fbb620e4'><marimo-dropdown data-initial-value='[&quot;ciou01&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003epiece&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;ciou01&quot;,&quot;feng01&quot;,&quot;gu01&quot;,&quot;guan01&quot;,&quot;guan02&quot;,&quot;guan03&quot;,&quot;jiou01&quot;,&quot;jiou02&quot;,&quot;jiou03&quot;,&quot;jiou04&quot;,&quot;jiou05&quot;,&quot;liang01&quot;,&quot;liang02&quot;,&quot;liang03&quot;,&quot;siang01&quot;,&quot;siang02&quot;,&quot;yi01&quot;,&quot;yi02&quot;,&quot;yi03&quot;,&quot;yi04&quot;,&quot;yi05&quot;,&quot;yi06&quot;,&quot;yi07_modulation&quot;,&quot;yi07_originalmode&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='ZBYS-1' random-id='cef42d30-7d12-d09c-d6d4-95d2431fc473'><marimo-slider data-initial-value='0.0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eOpen \u6563\u97f3 bias (- more open, + fewer)&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-start='-12.0' data-stop='12.0' data-step='0.5' data-steps='[]' data-debounce='false' data-disabled='false' data-orientation='&quot;horizontal&quot;' data-show-value='false' data-include-input='false' data-full-width='false'></marimo-slider></marimo-ui-element><marimo-ui-element object-id='ZBYS-2' random-id='0bfac24f-5420-15c7-bfe2-b8adf4f1bcc8'><marimo-slider data-initial-value='0.0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eHarmonic \u6cdb\u97f3 bias (- more harmonics, + fewer)&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-start='-12.0' data-stop='12.0' data-step='0.5' data-steps='[]' data-debounce='false' data-disabled='false' data-orientation='&quot;horizontal&quot;' data-show-value='false' data-include-input='false' data-full-width='false'></marimo-slider></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": "ffb3f289aff0915b1983e11dd2c726bb",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "ciou01 - 96 notes (96 scored)\n  predicted:  \u6309  42 | \u6563  54 | \u6cdb   0\n  expert:     \u6309  62 | \u6563  34 | \u6cdb   0\n  exact agreement (scored only): 57/96 = 59.4%\n  \u00b7 = not scored\n\n    #  pitch  predicted        expert          \n  ------------------------------------------------\n    0     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n    1      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n    2     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n    3     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n    4     24  \u6309 6\u5f267\u5fbd        \u6309 7\u5f267\u5fbd6\u5206     \u2717\n    5      9  \u6563 5\u5f26           \u6563 5\u5f26           \u2713\n    6     21  \u6309 5\u5f267\u5fbd        \u6309 7\u5f269\u5fbd        \u2717\n    7      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n    8     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n    9     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   10     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   11     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   12     19  \u6309 6\u5f269\u5fbd        \u6309 5\u5f267\u5fbd6\u5206     \u2717\n   13     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   14     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   15     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   16     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   17     24  \u6309 6\u5f267\u5fbd        \u6309 6\u5f267\u5fbd        \u2713\n   18     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   19     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   20     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   21     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   22      9  \u6563 5\u5f26           \u6309 2\u5f269\u5fbd        \u2717\n   23      7  \u6563 4\u5f26           \u6309 2\u5f2610\u5fbd       \u2717\n   24     12  \u6309 4\u5f2610\u5fbd       \u6309 3\u5f269\u5fbd        \u2717\n   25     14  \u6309 5\u5f2610\u5fbd       \u6309 3\u5f268\u5fbd        \u2717\n   26      9  \u6563 5\u5f26           \u6309 2\u5f269\u5fbd        \u2717\n   27      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n   28      7  \u6563 4\u5f26           \u6309 2\u5f2610\u5fbd       \u2717\n   29      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n   30     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   31     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   32     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   33     21  \u6309 6\u5f268\u5fbd        \u6309 6\u5f268\u5fbd        \u2713\n   34     16  \u6309 6\u5f2610\u5fbd9\u5206    \u6309 5\u5f269\u5fbd        \u2717\n   35     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   36     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   37     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   38     14  \u6563 7\u5f26           \u6309 4\u5f269\u5fbd        \u2717\n   39     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   40     14  \u6309 5\u5f2610\u5fbd       \u6309 4\u5f269\u5fbd        \u2717\n   41      9  \u6563 5\u5f26           \u6563 5\u5f26           \u2713\n   42      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n   43     12  \u6309 4\u5f2610\u5fbd       \u6563 6\u5f26           \u2717\n   44     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   45     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   46      9  \u6563 5\u5f26           \u6563 5\u5f26           \u2713\n   47     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   48     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   49     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   50     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   51     19  \u6309 7\u5f2610\u5fbd       \u6309 6\u5f269\u5fbd        \u2717\n   52     17  \u6309 6\u5f2610\u5fbd       \u6309 6\u5f2610\u5fbd       \u2713\n   53     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   54     21  \u6309 6\u5f268\u5fbd        \u6309 7\u5f269\u5fbd        \u2717\n   55     24  \u6309 6\u5f267\u5fbd        \u6309 7\u5f267\u5fbd6\u5206     \u2717\n   56     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   57     21  \u6309 6\u5f268\u5fbd        \u6309 6\u5f268\u5fbd        \u2713\n   58     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   59     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   60     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   61     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   62     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   63     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   64     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   65     21  \u6309 6\u5f268\u5fbd        \u6309 6\u5f268\u5fbd        \u2713\n   66     16  \u6309 6\u5f2610\u5fbd9\u5206    \u6309 5\u5f269\u5fbd        \u2717\n   67     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   68     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   69     12  \u6309 4\u5f2610\u5fbd       \u6563 6\u5f26           \u2717\n   70      7  \u6563 4\u5f26           \u6563 4\u5f26           \u2713\n   71      9  \u6563 5\u5f26           \u6563 5\u5f26           \u2713\n   72     14  \u6309 5\u5f2610\u5fbd       \u6563 7\u5f26           \u2717\n   73     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   74     14  \u6563 7\u5f26           \u6563 7\u5f26           \u2713\n   75     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   76     14  \u6309 5\u5f2610\u5fbd       \u6563 7\u5f26           \u2717\n   77     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   78     14  \u6309 5\u5f2610\u5fbd       \u6309 5\u5f2610\u5fbd       \u2713\n   79     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   80     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   81     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   82     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   83     24  \u6309 6\u5f267\u5fbd        \u6309 6\u5f267\u5fbd        \u2713\n   84     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   85     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   86     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   87     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   88     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   89     14  \u6563 7\u5f26           \u6309 5\u5f2610\u5fbd       \u2717\n   90     19  \u6309 6\u5f269\u5fbd        \u6309 6\u5f269\u5fbd        \u2713\n   91     24  \u6309 6\u5f267\u5fbd        \u6309 6\u5f267\u5fbd        \u2713\n   92     16  \u6309 5\u5f269\u5fbd        \u6309 5\u5f269\u5fbd        \u2713\n   93     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n   94     12  \u6563 6\u5f26           \u6309 4\u5f2610\u5fbd       \u2717\n   95     12  \u6563 6\u5f26           \u6563 6\u5f26           \u2713\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nHfw",
+      "code_hash": "3081b7aa95cd3f7723ea06d52dec7f9e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"9-which-pitches-does-the-model-get-wrong\">9. Which pitches does the model get wrong?</h2>\n<span class=\"paragraph\"><code>variants</code> and <code>majority</code> measure that pitch's ambiguity. Errors on\nlow-majority pitches are largely inherent to the task; errors on\nhigh-majority pitches are model failures worth chasing.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "xXTn",
+      "code_hash": "e9d3458b2e48a8cef149156a0a52705e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "   pitch     n  wrong     err  variants  majority\n       0     3      0    0.0%         1    100.0%\n       2     5      3   60.0%         2     60.0%\n       5    21      5   23.8%         2     76.2%\n       7    37     11   29.7%         4     75.7%\n       9    33     16   48.5%         4     51.5%\n      12    48     24   50.0%         5     54.2%\n      14    60     41   68.3%         5     36.7%\n      16    20     11   55.0%         4     50.0%\n      17    28     26   92.9%         4     35.7%\n      19    57     28   49.1%         6     56.1%\n      21    47     23   48.9%         4     46.8%\n      24    34     25   73.5%         4     64.7%\n      26    24     19   79.2%         3     62.5%\n      28     6      4   66.7%         2     66.7%\n      31     5      3   60.0%         2     60.0%\n      33     5      5  100.0%         2     80.0%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}

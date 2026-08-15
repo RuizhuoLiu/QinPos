@@ -7,27 +7,26 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+
     return (mo,)
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        # Design history: all three Viterbi cost functions, evaluated side by side
+    mo.md(r"""
+    # Design history: all three Viterbi cost functions, evaluated side by side
 
-        Runs v1 (cramped-only), v2 (comfort band) and v3 (center pull,
-        the live `qinpos.viterbi`) against the CURRENT
-        `data/gq39_clean.csv` and reports string accuracy for each.
+    Runs v1 (cramped-only), v2 (comfort band) and v3 (center pull,
+    the live `qinpos.viterbi`) against the CURRENT
+    `data/gq39_clean.csv` and reports string accuracy for each.
 
-        Note: the numbers annotated inside the v1/v2 files (17.4% /
-        23.2%) were measured on an EARLIER version of the cleaned CSV
-        (before the period-split loader fix and the altered-tuning
-        exclusions), so the numbers printed here will differ slightly —
-        what matters and stays stable is the ORDERING and the size of
-        the jumps between versions.
-        """
-    )
+    Note: the numbers annotated inside the v1/v2 files (17.4% /
+    23.2%) were measured on an EARLIER version of the cleaned CSV
+    (before the period-split loader fix and the altered-tuning
+    exclusions), so the numbers printed here will differ slightly —
+    what matters and stays stable is the ORDERING and the size of
+    the jumps between versions.
+    """)
     return
 
 
@@ -44,7 +43,7 @@ def _():
 
     ROOT = Path(__file__).resolve().parent.parent
     CLEAN_CSV = ROOT / "data/gq39_clean.csv"
-    HISTORY = ROOT / "design_history"
+    HISTORY = ROOT / "src/qinpos/OldVersions_scr" 
 
     def load_version(path):
         spec = importlib.util.spec_from_file_location(path.stem, path)
@@ -93,6 +92,7 @@ def _(Note, by_piece, notated_pitch):
             match += sum(c.string == int(r["string"]) for c, r in zip(path, rs))
             total += len(rs)
         return match, total
+
     return (evaluate,)
 
 

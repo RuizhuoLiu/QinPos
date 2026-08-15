@@ -8,6 +8,9 @@ dependencies = [
     "openpyxl>=3.1",
     "marimo>=0.23.14",
     "edit>=0.0.4",
+    "streamlit>=1.61.1",
+    "cairosvg>=2.9.0",
+    "imageio-ffmpeg>=0.6.0",
 ]
 
 [project.optional-dependencies]

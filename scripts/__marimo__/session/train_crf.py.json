@@ -1,0 +1,279 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "ab2ea3ac24d2932d530661c0e144d06f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"phase-3b-linear-chain-crf\">Phase 3b: linear-chain CRF</h1>\n<span class=\"paragraph\">Trains <code>qinpos.crf</code> on the same by-piece split as <code>train_weights.py</code>.\nThe CRF adds two things the perceptron cannot give: per-note\nmarginals (the visualisation input) and an l2 knob.</span>\n<span class=\"paragraph\">Verified once (Aug 2026): finite-difference gradient check 5e-10,\nbrute-force path probabilities sum to 1.000000, inference exact at\n246 states/column.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "d72a523eb12d12e4710ebd0f73538840",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "a62cf586805746e2bc90b7395c2405d5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "[gu01/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 3, 'string': 2, 'position': 2} (degree=1.6 range='2,1,1' string=2.2 position='7.6,9')\n[guan01/section1] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 3, 'position': 2} (degree='1,1,6' range='1,3,3' string='3,7,7' position='6.2,7')\n[jiou02/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 2, 'string': 2, 'position': 3} (degree=3.5 range=2.3 string=6.6 position='7.,9,7')\n[yu03/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 2, 'position': 3} (degree='5,5,6' range='1,2,2' string=3.5 position='0,9,7.9')\ntrain 18 / test 6 pieces\ntest: ['ciou01', 'guan02', 'jiou03', 'liang02', 'yi01', 'yi05']\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "0f6b44b8f005ccfadcce64f426adf1b3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"1-baselines\">1. Baselines</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "c5e8b2b4b0fc1f7ab8a23bebcc6265e2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "context-free lookup: exact=45.5% (n=433)\nperceptron:          exact=43.0% kind=67.7% string=45.7%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Xref",
+      "code_hash": "f08ff2cc733e12ae07f17411473d5c40",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-metrics-used-below\">2. Metrics used below</h2>\n<span class=\"paragraph\"><code>evaluate</code> gives Viterbi-path exact match. <code>topk</code> and <code>calibration</code>\nread the marginals instead: the first is the shortlist metric this\ntask actually wants (a pitch with five valid expert realisations\ncannot be scored fairly by top-1), the second checks the marginals\nare meaningful enough to drive the fingerboard heat map.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "3cb71fcc9ca644d7194a3876820dfc15",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "a3081aa16c0755593be38ea0299f40db",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"3-l2-sweep\">3. l2 sweep</h2>\n<span class=\"paragraph\">Four orders of magnitude move held-out accuracy by under 2pp: at\nlr=0.5 the per-piece gradient is tens of feature counts and l2*w is\na rounding error below ~0.1. The train-test gap tracks which\nFEATURES are on, not how hard they are penalised \u2014 which is what\nsection 4 measures.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "591234b849a73be2b079611438064e7e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "       l2   train    test     gap  max|w|\n   0.0001   55.7%   37.6%  +18.0%    3.45\n   0.0100   55.7%   37.6%  +18.0%    3.29\n   0.1000   56.2%   37.9%  +18.3%    2.36\n   0.3000   55.3%   39.0%  +16.3%    1.93\n   1.0000   51.8%   36.0%  +15.8%    1.34\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "c7ca664d5993f170eff0aa7f274e09b2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-ablation-grid\">4. Ablation grid</h2>\n<span class=\"paragraph\">Every row retrains from scratch with the named features frozen at\nzero, so the survivors re-fit around the absence.</span>\n<span class=\"paragraph\">The result is that the GAP tracks the arc features and nothing\nelse. Arc features condition on the model's own previous decision,\nright about half the time here; a confidently-weighted transition\nrule applied from a wrong anchor excludes the correct candidate\nrather than merely failing to help. The v6 context features read\nthe next note's candidate SET, which follows from the input melody\nand cannot be got wrong \u2014 same information, no propagation.</span>\n<span class=\"paragraph\">Bands and context both encode register-dependent string preference,\none by memorising 28 parameters and one by generalising over 5, and\n1286 training notes only support one of them.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "51a969048ca969b626dca59fbcc7677b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  configuration            train    test     gap    kind  string  str|kind\n  ----------------------------------------------------------------------\n  node only (v4 set)       50.2%   45.7%   +4.4%   70.0%   49.9%     62.4%\n  node + context           49.8%   45.3%   +4.5%   72.1%   49.0%     60.7%\n  node + arc (v5)          56.0%   38.6%  +17.4%   56.4%   45.7%     58.7%\n  everything               56.2%   37.9%  +18.3%   58.4%   43.4%     58.2%\n  context, no bands        49.7%   49.0%   +0.7%   68.8%   53.3%     62.8%\n\n  reference: perceptron 48.5%, n-gram backoff 53.3% top-1 / 79.4% top-3\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "f76fa6c05015f6492e4d02d729080be7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"5-best-configuration\">5. Best configuration</h2></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "bf02a42424f4c1312301cdfc1f7edb7e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  context, no bands (n=433): top-1 49.0%  top-2 68.8%  top-3 82.7%  top-5 95.6%\n\n    top marginal   notes  accuracy\n  0.0 - 0.4          243    42.8%\n  0.4 - 0.6           99    46.5%\n  0.6 - 0.8           80    67.5%\n  0.8 - 1.0           11    72.7%\n\n  context weights:\n    next_reach_0       -0.192\n    next_reach_1_3     +0.237\n    next_reach_4_7     +0.253\n    next_reach_8p      -0.239\n    next_same_string   -0.645\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "iLit",
+      "code_hash": "375bd47089b206682cf2ad5b181b5e82",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "saved /home/s5523505/Desktop/SEM/MasterProject/QinPos/data/crf_weights.json\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "ffa0108d5c0e2b92e4cc2ce7995e774f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"6-marginals-demo\">6. Marginals demo</h2>\n<span class=\"paragraph\">Uncertain notes are where the fingerboard visual shows several\nhalf-lit alternatives, and they are the notes to put to the\ncollaborating performer: \"are these both acceptable here?\" turns\nmodel uncertainty into a measurement of the task's real ambiguity.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "0a599835c27bc56db00aa4a383283052",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "piece ciou01: 96 notes, 0 confident (P>0.8), 62 uncertain (P<0.5)\n\nfirst 8 notes, top-3 candidates:\n   0  9\u5fbd(hui)6\u5f26(string):0.33   10\u5fbd(hui)7\u5f26(string):0.21   \u6cdb(harmonic)7\u5fbd(hui)4\u5f26(string):0.14   <- expert: 9\u5fbd(hui)6\u5f26(string)\n   1  \u6563(open)4\u5f26(string):0.73   9\u5fbd(hui)1\u5f26(string):0.13   10\u5fbd(hui)2\u5f26(string):0.09   <- expert: \u6563(open)4\u5f26(string)\n   2  9\u5fbd(hui)6\u5f26(string):0.39   7\u5fbd(hui)6\u5206(fen)5\u5f26(string):0.17   \u6cdb(harmonic)7\u5fbd(hui)4\u5f26(string):0.13   <- expert: 9\u5fbd(hui)6\u5f26(string)\n   3  \u6563(open)6\u5f26(string):0.54   10\u5fbd(hui)4\u5f26(string):0.17   9\u5fbd(hui)3\u5f26(string):0.15   <- expert: \u6563(open)6\u5f26(string)\n   4  7\u5fbd(hui)6\u5206(fen)7\u5f26(string):0.21   \u6cdb(harmonic)7\u5fbd(hui)6\u5f26(string):0.20   7\u5fbd(hui)6\u5f26(string):0.16   <- expert: 7\u5fbd(hui)6\u5206(fen)7\u5f26(string)\n   5  \u6563(open)5\u5f26(string):0.65   9\u5fbd(hui)2\u5f26(string):0.10   8\u5fbd(hui)1\u5f26(string):0.10   <- expert: \u6563(open)5\u5f26(string)\n   6  9\u5fbd(hui)7\u5f26(string):0.36   8\u5fbd(hui)6\u5f26(string):0.24   \u6cdb(harmonic)7\u5fbd(hui)5\u5f26(string):0.10   <- expert: 9\u5fbd(hui)7\u5f26(string)\n   7  \u6563(open)4\u5f26(string):0.73   9\u5fbd(hui)1\u5f26(string):0.13   10\u5fbd(hui)2\u5f26(string):0.09   <- expert: \u6563(open)4\u5f26(string)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}

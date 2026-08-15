@@ -1,0 +1,101 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "2c3133440b16a8957ec76fe7d56aa659",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"design-history-all-three-viterbi-cost-functions-evaluated-side-by-side\">Design history: all three Viterbi cost functions, evaluated side by side</h1>\n<span class=\"paragraph\">Runs v1 (cramped-only), v2 (comfort band) and v3 (center pull,\nthe live <code>qinpos.viterbi</code>) against the CURRENT\n<code>data/gq39_clean.csv</code> and reports string accuracy for each.</span>\n<span class=\"paragraph\">Note: the numbers annotated inside the v1/v2 files (17.4% /\n23.2%) were measured on an EARLIER version of the cleaned CSV\n(before the period-split loader fix and the altered-tuning\nexclusions), so the numbers printed here will differ slightly \u2014\nwhat matters and stays stable is the ORDERING and the size of\nthe jumps between versions.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "c4934668a29796fe2b32816c6c48376b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "b823a5a274aea4ac92055d5168847b55",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "967 usable stopped notes across 24 pieces\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "fce45e850905af3e43aa6bb912395a7a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "76ce09ba070923aea7b64e8d04c77d01",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "version                                      accuracy\n------------------------------------------------------\nv1 cramped-only (one-sided wall)          186/967 = 19.2%\nv2 comfort band [5,10] (flat interior)    226/967 = 23.4%\nv3 center pull toward hui 8.5 (LIVE)      454/967 = 46.9%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}

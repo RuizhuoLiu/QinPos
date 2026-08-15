@@ -1,14 +1,11 @@
-"""[DESIGN HISTORY - VERSION 2 of 3] Comfort-band cost. SUPERSEDED.
+"""[VERSION 2] Comfort-band cost. SUPERSEDED.
 
-Two-sided comfort BAND [hui 5, hui 10]: zero cost inside, linear
-penalty outside. Fixed v1's missing nut-side wall but kept the flat
-interior — no gradient where most string choices actually happen, so
-the decoder still surrendered those choices to hand-crafted arc
-weights. Measured 23.2% (old CSV) vs v1 17.4%; superseded by v3's
-two-sided pull toward hui 8.5 after context-free heuristic probes
+Two-sided comfort BAND [hui 5, hui 10]: zero cost inside, linear penalty outside. 
+Fixed v1's missing nut-side wall but kept the flat interior, no gradient where most string choices actually happen,
+so the decoder still surrendered those choices to hand-crafted arc weights. 
+Measured 23.2% (old CSV) vs v1 17.4%; superseded by v3's two-sided pull toward hui 8.5 after context-free heuristic probes
 showed expert choice behaves like a continuous pull (~51% alone).
-LESSON: match the SHAPE of the cost to the shape of the empirical
-distribution, not just its support.
+LESSON: match the SHAPE of the cost to the shape of the empirical distribution, not just its support.
 Runnable standalone (absolute imports); do NOT import from the pipeline.
 """
 
@@ -19,21 +16,15 @@ from dataclasses import dataclass
 from qinpos.theory import Candidate, Note
 from qinpos.candidates import candidates_for
 
-# ---------------------------------------------------------------------------
 # Feature extraction
-# ---------------------------------------------------------------------------
 # Node features (about one candidate in isolation):
-#   is_open       : 1 if 散音 (free left hand, resonant) else 0
-#   is_harmonic   : 1 if 泛音 else 0
-#   below_center  : max(0, 8.5 - position) for stopped notes — pull
-#                   toward the hui-8.5 home region from the yueshan side
-#   above_center  : max(0, position - 8.5) — pull from the nut side
-# (Empirical basis, July 2026: GQ39 expert stopped positions cluster
-#  tightly around hui 7-10; a context-free "nearest string to hui 8.5"
-#  heuristic alone reproduces the expert string 51% of the time. A flat
-#  comfort BAND gives the decoder no gradient inside the band and it
-#  drifts; a two-sided pull toward the center fixes that while leaving
-#  the asymmetry learnable in Path B.)
+#   is_open       : 1 if open (散音) (free left hand, resonant) else 0
+#   is_harmonic   : 1 if harmonic (泛音) else 0
+#   below_center  : max(0, 8.5 - position) for stopped notes, pull toward the hui-8.5 home region from the yueshan side
+#   above_center  : max(0, position - 8.5), pull from the nut side (Empirical basis, July 2026: GQ39 expert stopped positions cluster tightly around hui 7-10;
+#   a context-free "nearest string to hui 8.5" heuristic alone reproduces the expert string 51% of the time.
+#   A flat comfort BAND gives the decoder no gradient inside the band and it drifts;
+#   a two-sided pull toward the center fixes that while leaving the asymmetry learnable in Path B.)
 # Arc features (about a transition):
 #   string_cross  : |Δstring|
 #   hand_travel   : |Δposition| when both notes are stopped (left-hand slide)
@@ -64,9 +55,7 @@ def arc_features(a: Candidate, b: Candidate) -> dict[str, float]:
     }
 
 
-# ---------------------------------------------------------------------------
 # Weights (Path A: hand-crafted starting point; Path B will learn these)
-# ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Weights:
     is_open: float = -0.3       # mild preference for resonant open strings
@@ -89,13 +78,10 @@ def arc_cost(a: Candidate, b: Candidate, w: Weights) -> float:
     return w.dot(arc_features(a, b))
 
 
-# ---------------------------------------------------------------------------
 # Decoder
-# ---------------------------------------------------------------------------
 def decode_lattice(lattice: list[list[Candidate]],
                    w: Weights = Weights()) -> list[Candidate]:
     """Minimum-cost path through an explicit candidate lattice.
-
     lattice[i] is the (non-empty) candidate list for note i.
     Returns one Candidate per note.
     """

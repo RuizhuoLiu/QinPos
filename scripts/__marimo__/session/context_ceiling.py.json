@@ -1,0 +1,318 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.23.14",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "2f6615e6e379bc7782c430e6575e8cc0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"how-much-context-worth\">How much context worth</h1>\n<span class=\"paragraph\">Pitch-only mapping cannot exceed 54.7%,\nnode-only model - 48.5% of it. </span>\n<span class=\"paragraph\">Every target above\n~55% therefore has to come from context.</span>\n<span class=\"paragraph\">Sections: </span>\n<span class=\"paragraph\">(1) oracle ceilings, the information in each context;</span>\n<span class=\"paragraph\">(2) honest backoff, what generalises from 33 pieces; </span>\n<span class=\"paragraph\">(2b) top-k, the shortlist metric; </span>\n<span class=\"paragraph\">(3-5) the three regularities that the arc and context features built on.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "9c23e5c7099ba8a29b0218ab0ec20b9a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "607f261c596af4d526d18a0e56465f56",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "[gu01/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 3, 'string': 2, 'position': 2} (degree=1.6 range='2,1,1' string=2.2 position='7.6,9')\n[guan01/section1] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 3, 'position': 2} (degree='1,1,6' range='1,3,3' string='3,7,7' position='6.2,7')\n[jiou02/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 2, 'range': 2, 'string': 2, 'position': 3} (degree=3.5 range=2.3 string=6.6 position='7.,9,7')\n[yu03/\u5de5\u4f5c\u88681] skipping row: inconsistent packed field lengths {'degree': 3, 'range': 3, 'string': 2, 'position': 3} (degree='5,5,6' range='1,2,2' string=3.5 position='0,9,7.9')\ntrain 18 / test 6 pieces\ntest: ['ciou01', 'guan02', 'jiou03', 'liang02', 'yi01', 'yi05']\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "098d86dde8598517bd959390d69fc794",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "c31d8d88ad9a466f2824eae2a76fed2f",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "35aabd20ed23f178a43662cdd739ec50",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"1-oracle-ceilings\">1. Oracle ceilings</h2>\n<span class=\"paragraph\">Bucket the test notes by context key, count how many the bucket's majority realisation covers \u2014 <code>context_free_ceiling()</code> generalised past pitch-only.</span>\n<span class=\"paragraph\"><code>singleton</code> is the share of notes alone in their bucket, correct by construction; high - the ceiling is measuring memorisation rather than information. </span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "d5032396751f94bee26705fd10419f7a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  context                    kind         ceiling  buckets  singleton\n  ------------------------------------------------------------------\n  pitch only                 observable    54.7%       16      0.0%\n  + prev pitch               observable    69.1%      103      6.9%\n  + next pitch               observable    71.8%      103      7.2%\n  + both pitches             observable    90.1%      233     28.9%\n  + prev kind                oracle        61.2%       38      0.9%\n  + prev realisation         oracle        80.8%      114      8.3%\n  + prev real, next pitch    oracle        93.3%      238     32.1%\n\n  (n = 433 scored test notes)\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "9386962ea60d94364875b3ae0f37fd3b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2-honest-backoff\">2. Honest backoff</h2>\n<span class=\"paragraph\">Fit on train, predict each test note from the most specific context\nwhose training bucket has at least <code>MIN_COUNT</code> observations, else\nback off. This is an n-gram classifier with stupid backoff \u2014 a real\nsequence model, and the number the CRF has to beat.</span>\n<span class=\"paragraph\"><code>used</code> shows which level fired, i.e. how often the richer context\nwas available on held-out data.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "80b2d5ed0b0812f3415505c1eed19fc2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "5224c37471d8c20431a0084d291179c8",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  backoff ladder            test acc   level usage (acc within level)\n  --------------------------------------------------------------------------\n  pitch only                  45.5%   pitch 433 (45%)\n  prev pitch -> pitch         45.7%   prev+pitch 385 (45%)  pitch 48 (50%)\n  next pitch -> pitch         53.3%   pitch+next 388 (55%)  pitch 45 (40%)\n  both -> prev -> pitch (v1)    49.7%   both 230 (62%)  prev+pitch 155 (31%)  pitch 48 (50%)\n  both -> next -> pitch       52.9%   both 230 (62%)  pitch+next 158 (43%)  pitch 45 (40%)\n\n  reference: v4 node-only model 48.5%, oracle pitch ceiling 54.7%\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "emfo",
+      "code_hash": "f89f28c65d095b732e0fdb7a5cded18c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"2b-top-k\">2b. Top-k</h2>\n<span class=\"paragraph\">Exact match asks for the one realisation the performer happened to\nplay, which is unfair on a task with real ambiguity: pitch 14 has\nfive distinct expert realisations, and naming a different valid one\nscores the same as naming an unplayable one. Top-k asks whether the\nexpert's choice is in the shortlist \u2014 the honest framing for a\nsystem whose output is a suggestion.</span>\n<span class=\"paragraph\"><code>coverage</code> is the share of notes whose bucket held at least k\nrealisations; below that, top-k saturates for structural reasons.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "e6254077a01548d9a221a96976850377",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  next-pitch backoff, n = 433 scored test notes\n      k  top-k acc   coverage\n      1     53.3%     100.0%\n      2     73.2%      86.8%\n      3     79.4%      63.3%\n      5     84.1%      21.5%\n\n  A trained model shares statistics across pitches through\n  features instead of memorising one bucket per context, so\n  these are a FLOOR for what the CRF should reach, not a target.\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "95763e1270b7ad69586b1c77cd222fb4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"3-structure\">3. \u6cdb\u97f3\u6bb5 structure</h2>\n<span class=\"paragraph\">Testing whether harmonics are sectional (\u6cdb\u8d77 \u2026 \u6cdb\u6b62) rather than\nisolated, which in a chain model means P(harmonic | prev harmonic)\nfar above P(harmonic).</span>\n<span class=\"paragraph\">A flat <code>is_harmonic</code> node cost cannot make the second harmonic of a\npassage cheaper than the first; <code>harm_run</code>/<code>harm_enter</code>/<code>harm_exit</code>\ncan. \u6563\u97f3 is the negative control.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "3f9ff732cea92e0415c57504c7200e32",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  harmonic \u6cdb\u97f3 (train pieces)\n    P(harmonic)              = 0.185   (238/1286 notes)\n    P(harmonic | prev harmonic) = 0.943   lift x5.10\n    17 runs, mean length 14.00, longest 44\n    run lengths: 1x2  3x3  4x1  5x1  6x1  8x1  10x1  13x1  17x1  18x1  20x1  40x1  42x1  44x1\n\n  harmonic \u6cdb\u97f3 (test pieces)\n    P(harmonic)              = 0.072   (31/433 notes)\n    P(harmonic | prev harmonic) = 0.964   lift x13.47\n    1 runs, mean length 31.00, longest 31\n    run lengths: 31x1\n\n  open \u6563\u97f3 (train pieces)\n    P(open)              = 0.299   (384/1286 notes)\n    P(open | prev open) = 0.349   lift x1.17\n    250 runs, mean length 1.54, longest 9\n    run lengths: 1x163  2x62  3x13  4x9  6x1  7x1  9x1\n\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "5e522dc7d4e522b3b4c69b65fa2be70d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-repeated-pitches\">4. Repeated pitches</h2>\n<span class=\"paragraph\">Error analysis on ciou01 found the expert alternating timbre on\nrepeated pitches (\u65637\u5f26 \u2192 \u63095\u5f2610\u5fbd \u2192 \u65637\u5f26, five times in one\npiece) while the model held one fingering.</span>\n<span class=\"paragraph\">A context-free model maps pitch to a single realisation, so it\nalways repeats; the expert's repeat rate is therefore a hard bound\non its accuracy at those notes. <code>repeat_identical</code> captures this.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "69a40a83dad1009895c4de521424d5a5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  train pieces: 257 adjacent same-pitch pairs\n    identical          116   45.1%\n    kind changed        80   31.1%\n    string changed      61   23.7%\n    -> a context-free model scores at most 45.1% on the SECOND note of each pair\n\n  test pieces: 64 adjacent same-pitch pairs\n    kind changed        33   51.6%\n    identical           22   34.4%\n    string changed       9   14.1%\n    -> a context-free model scores at most 34.4% on the SECOND note of each pair\n\n  all pieces: 321 adjacent same-pitch pairs\n    identical          138   43.0%\n    kind changed       113   35.2%\n    string changed      70   21.8%\n    -> a context-free model scores at most 43.0% on the SECOND note of each pair\n\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "961c02d8e5a569786a435fdaf8932b2c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"5-left-hand-geometry\">5. Left-hand geometry</h2>\n<span class=\"paragraph\">A linear slope on |\u0394position| can only say \"further is worse\", and\nmisses two shapes: the \u8d70\u624b\u97f3 range (1-3 hui, where \u4e0a/\u4e0b/\u7ef0/\u6ce8/\u541f/\u7331\nlive) may be <em>preferred</em> over staying put, and crossing to an\nadjacent string at the same hui barely moves the finger at all.</span>\n<span class=\"paragraph\">Answered by the <code>travel_*</code> buckets and <code>same_hui_cross</code>. Read the\ntwo tables against each other \u2014 they are the \"\u6309\u97f3\u8d70\u5f26\u3001\u6cdb\u97f3\u8d70\u5fbd\"\ncontrast.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "58d550da7483b6a6654f097d6c23c30e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "  consecutive stopped pairs: 605\n     |\u0394string|         0      1-3      4-7       8+\n             0       119      285        0        0   (66.8%)\n             1       100       71        0        0   (28.3%)\n             2         4       16        0        0   ( 3.3%)\n            3+         5        4        1        0   ( 1.7%)\n    same hui, different string: 109 (18.0%)\n    stayed put (\u0394string 0, \u0394pos 0): 119 (19.7%)\n    short slide (\u0394string 0, 1-3 hui): 285 (47.1%)\n\n  consecutive harmonic pairs: 244\n     |\u0394string|         0      1-3      4-7       8+\n             0        10        3        0        0   ( 5.3%)\n             1       104        3        0        0   (43.9%)\n             2        31       40        0        0   (29.1%)\n            3+         8       45        0        0   (21.7%)\n    same hui, different string: 143 (58.6%)\n    stayed put (\u0394string 0, \u0394pos 0): 10 (4.1%)\n    short slide (\u0394string 0, 1-3 hui): 3 (1.2%)\n\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "1233289c9a00a91f99ee5cd518bd7561",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"findings\">Findings</h2>\n<ul>\n<li><strong>Next-pitch context generalises, previous-pitch does not.</strong> Both\n  have near-identical oracle ceilings (71.8% vs 69.1%) and bucket\n  counts, but honest backoff keeps +7.8pp from the next pitch and\n  +0.2pp from the previous one. Useful context is anticipatory,\n  which is a direct argument for forward-backward over any\n  left-to-right model.</li>\n<li><strong>Top-1 is not the right target.</strong> Backoff reaches 53.3% at k=1\n  and 79.4% at k=3. The 70-80% goal is met on the shortlist metric,\n  which is also the honest one for a suggestion system.</li>\n<li><strong>The oracle-honest gap is corpus size.</strong> Both-pitches context\n  has 90.1% oracle against 49.7% honest across 233 buckets for 433\n  notes. Expanding the corpus outranks further model refinement.</li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
