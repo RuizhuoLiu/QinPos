@@ -304,16 +304,16 @@ with col_pick:
 with col_help:
     with st.expander("Notation format"):
         st.markdown(
-            "- `1`–`7` degrees; unmarked octave holds 三弦散音 (1) to 七弦散音 (6)\n"
+            "- `1`–`7` degrees; unmarked octave holds open string 3 三弦散音 (1) to open string 7 七弦散音 (6)\n"
             "- `'` up an octave, `,` down (repeatable: `1''`, `5,`)\n"
             "- `#` `b` accidentals · `0` rest · `-` extends the previous note\n"
-            "- `^` `o` `p` force 泛音 / 散音 / 按音 for one note\n"
+            "- `^` `o` `p` force harmonic泛音 / open散音 / stopped按音 for one note\n"
             "- `|` bar line · `//` comment, at the start of a line or after the music\n"
             "- `xN` at the END of a line repeats that line N times (ostinati)\n"
             "- headers: `title:` `key:` `gong_string:` `transpose:`\n\n"
             "`key:` is decorative — the model works in semitones above the "
             "open 1st string, so absolute pitch never enters a decision. "
-            "`gong_string` (3 = 正调) is what places the tune on the instrument."
+            "`gong_string` (3 = default tune正调) is what places the tune on the instrument."
         )
 
 text = st.text_area("Jianpu", value=_presets[choice], height=220, key=f"src_{choice}")
@@ -327,7 +327,7 @@ if score.errors:
         st.error(e)
 unplayable = score.unplayable()
 if unplayable:
-    st.error(f"{len(unplayable)} notes cannot be played in 正调:")
+    st.error(f"{len(unplayable)} notes cannot be played in default tune正调:")
     for i, n, why in unplayable[:8]:
         st.write(f"- note {i + 1} ({n.semitones:+.0f} semitones): {why}")
     fix = suggest_header(score)
@@ -349,7 +349,7 @@ low_conf = sum(p < 0.5 for p in pred.confidence)
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Notes", rng["n"])
 m2.metric("Range", f"{rng['low_label']} … {rng['high_label']}")
-m3.metric("按 / 散 / 泛", f"{mix['stopped']} / {mix['open']} / {mix['harmonic']}")
+m3.metric("stopped按 / open散 / harmonic泛", f"{mix['stopped']} / {mix['open']} / {mix['harmonic']}")
 m4.metric("Ambiguous (P<0.5)", f"{low_conf}", help="Notes with no clearly best fingering")
 
 if score.warnings:
