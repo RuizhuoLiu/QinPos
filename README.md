@@ -9,7 +9,7 @@ Bournemouth University.
 
 ## Fingerboard view
 
-![Fingerboard with CRF marginals](exports/fingerboard_example.svg)
+![Fingerboard with CRF marginals](docs/fingerboard_example.svg)
 
 
 ## Motivation
