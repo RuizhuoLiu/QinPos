@@ -7,7 +7,7 @@ Columns consumed per event row:
 
 Messy realities handled:
     * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in one cell, either as strings '2,3,5' or floats 3.6
-    (Excel turned a comma into a decimal point on integer columns). Exploded here into simultaneous events sharing an onset.
+    Exploded here into simultaneous events sharing an onset.
     * `position` mixes float / str / 0 (open).
     * `position` when hui values run 1-13 (two digits for 10-13), so a packed pair like "10,12" collapses to the float 10.12 then became (10, 1).
       try both a one-digit and a two-digit reading, keep whichever falls inside the physically playable hui range.
