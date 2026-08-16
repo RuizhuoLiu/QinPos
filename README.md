@@ -1,30 +1,25 @@
 # QinPos
 
-Automatic **string and hui-position assignment for the guqin (古琴)**: give it a
-melody in jianpu (numbered notation), get back a playable fingering — which
+Automatic **string and hui-position assignment for the guqin (古琴)**: input a melody in jianpu (numbered notation), output a playable fingering: which
 string, which hui position, and which timbre (散音 open / 按音 stopped / 泛音
 harmonic) for every note.
 
 MSc Artificial Intelligence for Media, National Centre for Computer Animation,
 Bournemouth University.
 
+## Fingerboard view
+
+![Fingerboard with CRF marginals](exports/fingerboard_example.svg)
+
+
 ## Motivation
 
-Guqin music is written in **jianzipu (減字譜)**, a tablature that records
-*actions* — press the third string at the seventh hui — but not pitches.
-Jianpu records *pitches* but not actions. Turning one into the other is the
-first stage of 打谱 (dapu), the traditional practice of realising a piece from
-notation, and it is done by hand by experienced players.
+Guqin music is written in **jianzipu (減字譜)**, a tablature that records *actions*: press the third string at the seventh hui, but not pitches.
+Jianpu records *pitches* but not actions. Turning one into the other is the first stage of 打谱 (dapu), the traditional practice of realising a piece from notation, and it is done by hand by experienced players.
 
-The choice is not obvious: a single pitch can usually be produced on several
-strings, in three different timbres, so a short phrase has thousands of
-possible fingerings. Which one an expert picks depends on hand economy, timbre
-convention, and what comes next.
+The choice is not obvious: a single pitch can usually be produced on several strings, in three different timbres, so a short phrase has thousands of possible fingerings. Which one an expert picks depends on hand economy, timbre convention, and what comes next.
 
-QinPos automates the pitch-to-position half of that decision. The hui position
-itself is **physically determined** once a string is chosen (string-length
-ratios), so the real problem is a structured choice over strings and timbres —
-solved here with a candidate lattice and a linear-chain CRF.
+QinPos automates the pitch-to-position half of that decision. The hui position itself is **physically determined** once a string is chosen (string-length ratios), so the real problem is a structured choice over strings and timbres, which is solved here with a candidate lattice and a linear-chain CRF.
 
 **Out of scope:** left- and right-hand technique (吟猱綽注, 挑抹勾剔 …) is not
 predicted. The tablature output leaves those slots empty.
@@ -34,18 +29,8 @@ predicted. The tablature output leaves those slots empty.
 ```
 src/qinpos/       library code (physics, dataset loader, features, decoder, CRF)
 scripts/          marimo notebooks: data cleaning, training, evaluation, fingerboard
-streamlit_app.py  the interactive tool
+streamlit_app.py  the interface
 data/             GQ39 clone + generated files (not committed)
-```
-
-## Setup
-
-```bash
-uv venv && uv pip install -e .
-git clone --depth 1 https://github.com/yufenhuang/Guqin-dataset.git data/GQ39
-uv run marimo edit scripts/clean_gq39.py      # build data/gq39_clean.csv
-uv run marimo edit scripts/train_crf.py       # train, writes data/crf_weights.json
-uv run streamlit run streamlit_app.py
 ```
 
 ## Data
@@ -59,17 +44,13 @@ uv run streamlit run streamlit_app.py
 
 - **JianZiPu font / glyphs** — jianzipu character rendering:
   https://github.com/neuralfirings/JianZiPu (SIL Open Font License)
-- **jianzipu (alephpi)** — reference for jianzipu encoding structure:
-  https://github.com/alephpi/jianzipu
-- **marimo** — reactive Python notebooks: https://marimo.io
-- **Streamlit** — application front end: https://streamlit.io
 
 Hui-position ratios were checked against 陳應時《琴律學》(Shanghai Conservatory
 of Music Press, 2015).
 
 No pre-trained machine-learning model is used. The CRF and the structured
 perceptron are implemented from scratch in pure Python (`src/qinpos/crf.py`,
-`src/qinpos/learn.py`); there is no PyTorch/TensorFlow dependency.
+`src/qinpos/learn.py`).
 
 ## Licence
 
