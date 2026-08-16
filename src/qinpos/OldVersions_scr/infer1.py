@@ -24,6 +24,7 @@ __all__ = [
     "predict",
     "describe",
     "hui_fen_text",
+    "left_hand_finger",
     "fingering_rows",
     "timbre_mix",
 ]
@@ -104,65 +105,57 @@ def describe(c: Candidate, cjk: bool = True) -> str:
     return f"{KIND_SHORT[c.kind]} {string} {hui_fen_text(c.position)}"
 
 
-LANGS = ("zh", "en", "both")
+def left_hand_finger(c: Candidate, previous: Candidate | None = None) -> str:
+    """HEURISTIC left-hand finger, not a learned prediction.
 
-HEAD = {
-    "zh": {"jianpu": "jianpu", "semitones": "semitones", "timbre": "timbre",
-           "string": "string", "position": "position",
-           "alternatives": "alternatives", "baseline": "vs baseline"},
-    "both": {"jianpu": "jianpu 简谱", "semitones": "semitones 半音",
-             "timbre": "timbre 音色", "string": "string 弦",
-             "position": "position 徽位", "alternatives": "alternatives 备选",
-             "baseline": "vs baseline 对比基线"},
-}
-HEAD["en"] = HEAD["zh"]
+    Common teaching practice, not a rule of physics: the thumb (大指) takes
+    the region from the yueshan to about hui 7, the ring finger (名指) takes
+    hui 7 to the nut, and harmonic 泛音 are usually touched with 名指 low on the board
+    and middel finger 中指/大指 higher up. Real fingering also depends on 绰注, 上下,
+    slides and the following note, none of which this looks at.
 
-
-def _cell(zh: str, en: str, lang: str) -> str:
-    if lang == "zh":
-        return zh
-    if lang == "en":
-        return en
-    return f"{zh} {en}" if zh and en else (zh or en)
+    It is here so the tablature layer has something to print; it needs a
+    performer's review before it goes in front of anyone, and it should
+    eventually be a learned second output rather than an if-statement.
+    """
+    if c.kind == "open":
+        return ""
+    if c.kind == "harmonic":
+        return "名指" if c.position >= 7.0 else "中指"
+    return "名指" if c.position >= 7.3 else "大指"
 
 
 def fingering_rows(
     pred: Prediction,
     tokens=None,
     top_k: int = 3,
-    lang: str = "zh",
+    with_finger: bool = True,
 ) -> list[dict]:
-    """One dict per note, ready for a table widget or a CSV dump.
-
-    lang is "zh", "en" or "both". Neither hand's fingering appears here and
-    none is inferred elsewhere: that is a scope boundary, not a gap to fill.
-    """
-    if lang not in LANGS:
-        raise ValueError(f"lang must be one of {LANGS}, got {lang!r}")
-    head = HEAD[lang]
-
+    """One dict per note, ready for a table widget or a CSV dump."""
     rows = []
+    prev = None
     for i, (note, c) in enumerate(zip(pred.notes, pred.path)):
         m = pred.marginals[i]
         row = {
             "#": i + 1,
-            head["jianpu"]: tokens[i].raw if tokens else "",
-            head["semitones"]: round(note.semitones, 2),
-            head["timbre"]: _cell(KIND_CN[c.kind], c.kind, lang),
-            head["string"]: _cell(f"{CN_NUM[c.string]}弦", f"str {c.string}", lang),
-            head["position"]: _cell(hui_fen_text(c.position),
-                                    hui_fen_text(c.position, cjk=False), lang) or "—",
+            "jianpu": tokens[i].raw if tokens else "",
+            "semitones": round(note.semitones, 2),
+            "timbre": KIND_CN[c.kind],
+            "string": f"{CN_NUM[c.string]}string弦",
+            "position": hui_fen_text(c.position) or "—",
             "P": round(m.get(c, 0.0), 3),
-            head["alternatives"]: " / ".join(
-                f"{describe(k, cjk=(lang != 'en'))} {v:.2f}"
+            "alternatives": " / ".join(
+                f"{describe(k)} {v:.2f}"
                 for k, v in sorted(m.items(), key=lambda kv: -kv[1])[1:top_k]
             ),
         }
+        if with_finger:
+            row["左手 (heuristic)"] = left_hand_finger(c, prev)
         if pred.baseline_path is not None:
             base = pred.baseline_path[i]
-            row[head["baseline"]] = ("" if base == c
-                                     else f"was {describe(base, cjk=(lang != 'en'))}")
+            row["vs baseline"] = "" if base == c else f"was {describe(base)}"
         rows.append(row)
+        prev = c
     return rows
 
 

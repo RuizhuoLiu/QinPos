@@ -15,23 +15,6 @@ def _():
 def _(mo):
     mo.md(r"""
     # Viterbi string choice vs GQ39 experts
-
-    Decodes every piece's stopped-note melody with
-    `qinpos.viterbi.decode` and measures how often the predicted
-    string matches the expert annotation (from `data/gq39_clean.csv`,
-    clean + repaired rows only).
-
-    **Fairness**: input pitch is reconstructed from the *notation*
-    (degree/range/K, i.e. `physical - corrected residual`), never
-    from the expert's physical position directly, so the decoder
-    receives exactly what a real user would provide.
-
-    **Known caveat (v0)**: the cleaned CSV contains stopped notes
-    only, so consecutive notes in a sequence may not be adjacent in
-    the actual piece (open/harmonic notes in between are skipped).
-    This dilutes genuine sequential signal and under-serves the arc
-    features; the Phase 3 evaluation should rebuild full sequences
-    from the loader with timbre constraints.
     """)
     return
 
@@ -62,11 +45,23 @@ def _():
 
 
 @app.cell
+def _(Note):
+    from qinpos.candidates import candidates_for
+    _c = [c for c in candidates_for(Note(semitones=12)) if c.kind == "stopped"]
+    print(sorted(round(c.position, 2) for c in _c))
+    return
+
+
+@app.cell
+def _(CLEAN_CSV, by_piece, rows):
+    import hashlib
+    print(len(rows), sum(len(v) for v in by_piece.values()))
+    print(hashlib.sha256(CLEAN_CSV.read_bytes()).hexdigest()[:12])
+    return
+
+
+@app.cell
 def _(CLEAN_CSV, csv, defaultdict):
-    # New clean_gq39 schema: single `status` column
-    # (clean / repaired / alt_gong / needs_review). Everything except
-    # needs_review is usable; alt_gong rows already store the
-    # recomputed (small) residual under K_used, so no adjustment.
     rows = [r for r in csv.DictReader(CLEAN_CSV.open())
             if r["status"] != "needs_review"]
 

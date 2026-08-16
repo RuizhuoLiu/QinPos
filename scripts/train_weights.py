@@ -19,9 +19,6 @@ def _(mo):
     Trains the decoder's cost weights from GQ39 expert paths with an
     averaged structured perceptron, on full sequences with free timbre
     choice. Split is by piece, never by note, to avoid leakage.
-
-    The bar is section 3: a context-free pitch lookup table. A sequence
-    model scoring below it is not using context at all.
     """)
     return
 
@@ -118,6 +115,7 @@ def _(mo):
     ## 3. Context-free baselines
 
     Honest baseline: fit on train, score on test — the number to beat.
+
     Oracle ceiling: fit and score on the same notes, so not a baseline;
     it bounds what any pitch-only mapping could reach (54.7%).
     """)
@@ -165,9 +163,7 @@ def _(mo):
     mo.md(r"""
     ## 5. Train the full model
 
-    Then: lr sweep (does lr explain the arc penalty?), arc-scale sweep
-    (is the optimum at zero?), and error clustering (do arc features
-    turn isolated errors into runs?).
+    Then: lr sweep (does lr explain the arc penalty or not), arc-scale sweep (is the optimum at zero or not), and error clustering (do arc features turn isolated errors into runs or not).
     """)
     return
 
@@ -362,13 +358,11 @@ def _(BAND_FEATURES, learned, seqs):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 8. Style control: 散音/泛音 preference slider
+    ## 8. Style control: open/ harmonic 散音/泛音 preference slider
 
     Negative bias = cheaper = more of that timbre.
 
-    Timbre mix and exact agreement move independently: matching the
-    expert's overall 按/散/泛 proportions says nothing about matching
-    them note by note.
+    Timbre mix and exact agreement move independently: matching the expert's overall stopped/open/harmonic 按/散/泛 proportions says nothing about matching them note by note.
     """)
     return
 
@@ -404,14 +398,14 @@ def _(decode, harm_bias, learned, open_bias, piece_pick, seqs):
         fen = int(round((pos - hui) * 10))
         if fen >= 10:
             hui, fen = hui + 1, 0
-        return f"{hui}徽" if fen == 0 else f"{hui}徽{fen}分"
+        return f"{hui}hui徽" if fen == 0 else f"{hui}hui徽{fen}fen分"
 
     def _fmt(c) -> str:
         if c.kind == "open":
-            return f"散 {c.string}弦"
+            return f"散open {c.string}弦string"
         if c.kind == "harmonic":
-            return f"泛 {c.string}弦{_hui_fen(c.position)}"
-        return f"按 {c.string}弦{_hui_fen(c.position)}"
+            return f"泛harmonic {c.string}弦string{_hui_fen(c.position)}"
+        return f"按stopped {c.string}弦string{_hui_fen(c.position)}"
 
     def show(seq, w, limit=None, errors_only=False):
         pred = decode(seq.notes, w)
@@ -424,10 +418,10 @@ def _(decode, harm_bias, learned, open_bias, piece_pick, seqs):
                     for p, g, s in pairs if s)
 
         print(f"{seq.piece} - {len(pred)} notes ({n_scored} scored)")
-        print(f"  predicted:  按 {mix.get('stopped', 0):3d} | "
-              f"散 {mix.get('open', 0):3d} | 泛 {mix.get('harmonic', 0):3d}")
-        print(f"  expert:     按 {gold.get('stopped', 0):3d} | "
-              f"散 {gold.get('open', 0):3d} | 泛 {gold.get('harmonic', 0):3d}")
+        print(f"  predicted:  按stopped {mix.get('stopped', 0):3d} | "
+              f"散open {mix.get('open', 0):3d} | 泛harmonic {mix.get('harmonic', 0):3d}")
+        print(f"  expert:     按stopped {gold.get('stopped', 0):3d} | "
+              f"散open {gold.get('open', 0):3d} | 泛harmonic {gold.get('harmonic', 0):3d}")
         print(f"  exact agreement (scored only): {agree}/{n_scored} "
               f"= {agree / max(1, n_scored):.1%}")
         print("  · = not scored\n")

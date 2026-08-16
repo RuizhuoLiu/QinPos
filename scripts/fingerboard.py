@@ -14,10 +14,10 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Fingerboard viewer — CRF marginal heatmap on a physically true 琴面
+    # Fingerboard viewer — CRF marginal heatmap on a physically true guqin surface琴面
 
-    Every 徽 below sits at its real string-length fraction
-    (`theory.HUI_FRACTIONS`): 徽七 at 1/2, 徽九 at 2/3, and so on, so a qin
+    Every hui徽 below sits at its real string-length fraction
+    (`theory.HUI_FRACTIONS`): 7 hui徽七 at 1/2, 9 hui徽九 at 2/3, and so on, so a qin
     player recognises the geometry immediately.
 
     For the selected note every playable candidate lights up with opacity
@@ -30,9 +30,6 @@ def _(mo):
     (`WeightVector.biased`), i.e. a difficulty control: fewer open strings and
     harmonics generally means a harder, more left-hand-heavy fingering.
     Marginals recompute live.
-
-    All drawing lives in `qinpos.viz`, so the export section at the bottom
-    renders exactly what you see here — no second implementation to drift.
     """)
     return
 
@@ -66,17 +63,14 @@ def _():
     return EXPORTS, HUI_FRACTIONS, note_marginals, seqs, viz, w_base
 
 
-@app.cell(hide_code=True)
-def _():
-    def describe_note(note) -> str:
-        """Best-effort one-line label for a note, whatever fields it carries."""
-        for attr in ("pitch", "midi", "midi_pitch", "note", "degree"):
-            value = getattr(note, attr, None)
-            if value is not None:
-                return f"{attr}={value}"
-        return str(note)
-
-    return (describe_note,)
+@app.function(hide_code=True)
+def describe_note(note) -> str:
+    """Best-effort one-line label for a note, whatever fields it carries."""
+    for attr in ("pitch", "midi", "midi_pitch", "note", "degree"):
+        value = getattr(note, attr, None)
+        if value is not None:
+            return f"{attr}={value}"
+    return str(note)
 
 
 @app.cell
@@ -125,9 +119,7 @@ def _(
     margs = note_marginals(seq.notes, w_view)
     experts = list(seq.expert)
 
-    # The bias-0 reference. A slider move shows where the model ENDED UP; the
-    # question a viewer actually has is what it moved away from, so the
-    # unbiased argmax is carried alongside and drawn as a faint ring.
+    # The bias-0 reference. A slider move shows where the model ENDED UP; the question a viewer actually has is what it moved away from, so the unbiased argmax is carried alongside and drawn as a faint ring.
     biased = open_bias.value != 0.0 or harm_bias.value != 0.0
     if show_baseline.value and biased:
         base_margs = note_marginals(seq.notes, w_base)
@@ -135,7 +127,7 @@ def _(
         changed = [max(a, key=lambda c: a[c]) != b for a, b in zip(margs, baselines)]
     else:
         baselines, changed = None, None
-    return baselines, changed, experts, margs, seq, w_view
+    return baselines, changed, experts, margs, seq
 
 
 @app.cell
@@ -152,7 +144,6 @@ def _(
     HUI_FRACTIONS,
     baselines,
     cjk_labels,
-    describe_note,
     experts,
     margs,
     mo,
@@ -186,7 +177,7 @@ def _(
            else f" · moved from **{baseline}** at bias 0")
     )
     mo.vstack([mo.Html(svg), mo.md(caption)])
-    return argmax, expert, i, m, top
+    return
 
 
 @app.cell(hide_code=True)
@@ -277,14 +268,10 @@ def _(mo):
     * **piece walkthrough** — one frame per note, board plus a playhead moving
       through the confidence profile. This is the "watch the model read the
       score" clip.
-    * **bias sweep** — one note held fixed while 散音/泛音 bias runs from −2 to
+    * **bias sweep** — one note held fixed while open/harmonic 散音/泛音 bias runs from −2 to
       +2. Shows the fingering migrating between timbres, i.e. the difficulty
       knob, in about eight seconds.
     * **still figure** — the current frame as vector SVG for the dissertation.
-
-    `mp4` needs ffmpeg (`brew install ffmpeg`) and an SVG rasteriser
-    (`uv add cairosvg`, or `resvg` / `rsvg-convert` on PATH). `html` needs
-    nothing at all and is the safe fallback if the venue laptop is not yours.
     """)
     return
 
@@ -335,7 +322,6 @@ def _(
     HUI_FRACTIONS,
     baselines,
     changed,
-    describe_note,
     experts,
     export_cjk,
     export_fmt,

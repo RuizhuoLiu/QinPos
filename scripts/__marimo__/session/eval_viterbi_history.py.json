@@ -20,12 +20,12 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "2c3133440b16a8957ec76fe7d56aa659",
+      "code_hash": "8ea93230f2eee09837429860fcefd874",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"design-history-all-three-viterbi-cost-functions-evaluated-side-by-side\">Design history: all three Viterbi cost functions, evaluated side by side</h1>\n<span class=\"paragraph\">Runs v1 (cramped-only), v2 (comfort band) and v3 (center pull,\nthe live <code>qinpos.viterbi</code>) against the CURRENT\n<code>data/gq39_clean.csv</code> and reports string accuracy for each.</span>\n<span class=\"paragraph\">Note: the numbers annotated inside the v1/v2 files (17.4% /\n23.2%) were measured on an EARLIER version of the cleaned CSV\n(before the period-split loader fix and the altered-tuning\nexclusions), so the numbers printed here will differ slightly \u2014\nwhat matters and stays stable is the ORDERING and the size of\nthe jumps between versions.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"design-history-all-three-viterbi-cost-functions-evaluated-side-by-side\">Design history: all three Viterbi cost functions, evaluated side by side</h1>\n<span class=\"paragraph\">Runs v1 (cramped-only), v2 (comfort band) and v3 (center pull,\nthe live <code>qinpos.viterbi</code>) against the CURRENT\n<code>data/gq39_clean.csv</code> and reports string accuracy for each.</span></span>"
           }
         }
       ],
@@ -33,7 +33,7 @@
     },
     {
       "id": "vblA",
-      "code_hash": "c4934668a29796fe2b32816c6c48376b",
+      "code_hash": "abe1b65a86061690ef4a963fd476b503",
       "outputs": [
         {
           "type": "data",
@@ -59,7 +59,7 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "967 usable stopped notes across 24 pieces\n",
+          "text": "952 usable stopped notes across 24 pieces\n",
           "mimetype": "text/plain"
         }
       ]
@@ -92,7 +92,7 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "version                                      accuracy\n------------------------------------------------------\nv1 cramped-only (one-sided wall)          186/967 = 19.2%\nv2 comfort band [5,10] (flat interior)    226/967 = 23.4%\nv3 center pull toward hui 8.5 (LIVE)      454/967 = 46.9%\n",
+          "text": "version                                      accuracy\n------------------------------------------------------\nv1 cramped-only (one-sided wall)          190/952 = 20.0%\nv2 comfort band [5,10] (flat interior)    218/952 = 22.9%\nv3 center pull toward hui 8.5 (LIVE)      406/952 = 42.6%\n",
           "mimetype": "text/plain"
         }
       ]

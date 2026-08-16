@@ -16,10 +16,8 @@ def _(mo):
     mo.md(r"""
     # Jianpu → fingering
 
-    Paste any melody in 正调 and the trained CRF assigns 弦 / 徽位 / 音色 to
-    every note. Unlike `fingerboard_en.py` this needs no annotation, so it is
-    the path towards the Streamlit app — and the honest test of whether the
-    weights generalise past GQ39.
+    Paste any melody in default tune 正调 and the trained CRF assigns string弦 / hui徽位 / timbre音色 to
+    every note.
 
     **Format** — whitespace separated, `//` starts a comment line:
 
@@ -117,18 +115,16 @@ def _(mo, parse_jianpu, range_report, source, suggest_header):
         _lines.append(
             f"Range **{_rng['low_label']} … {_rng['high_label']}** "
             f"({_rng['span_semitones']:.0f} semitones), "
-            f"宫 on string {score.gong_string}."
+            f"gong宫 on string {score.gong_string}."
         )
-    _lines += [f"- ⚠️ {e}" for e in score.errors]
+    _lines += [f"- !! {e}" for e in score.errors]
     _lines += [f"- {w}" for w in score.warnings]
     for _i, _n, _why in unplayable[:8]:
-        _lines.append(f"- ⚠️ note {_i + 1} ({_n.semitones:+.0f} semitones): {_why}")
+        _lines.append(f"- !! note {_i + 1} ({_n.semitones:+.0f} semitones): {_why}")
     if len(unplayable) > 8:
         _lines.append(f"- … and {len(unplayable) - 8} more")
 
-    # Only two moves keep a tune on a 正调 instrument: whole octaves, or 宫 on a
-    # different open string (借调). If one of them rescues the piece, show the
-    # header lines to paste rather than silently fixing it behind the scenes.
+    # Only two moves keep a tune on a default tune正调 instrument: whole octaves, or gong宫 on a different open string (借调). If one of them rescues the piece, show the header lines to paste rather than silently fixing it behind the scenes.
     _fix = suggest_header(score)
     if _fix:
         _lines.append("")
@@ -142,11 +138,11 @@ def _(mo, parse_jianpu, range_report, source, suggest_header):
 def _(mo):
     open_bias = mo.ui.slider(
         -3.0, 3.0, step=0.25, value=0.0,
-        label="散音 preference (right = more open strings = easier)",
+        label="open散音 preference (right = more open strings = easier)",
     )
     harm_bias = mo.ui.slider(
         -3.0, 3.0, step=0.25, value=0.0,
-        label="泛音 preference (right = more harmonics)",
+        label="harmonic泛音 preference (right = more harmonics)",
     )
     cjk_labels = mo.ui.checkbox(value=True, label="Chinese labels")
     mo.vstack([
@@ -233,7 +229,7 @@ def _(fingering_rows, mo, pred, score, timbre_mix):
     _low = sum(p < 0.5 for p in pred.confidence)
     mo.vstack([
         mo.md(
-            f"按 {_mix['stopped']} · 散 {_mix['open']} · 泛 {_mix['harmonic']}"
+            f"按 {_mix['stopped']} · open散 {_mix['open']} · harmonic泛 {_mix['harmonic']}"
             f"  ·  {_low}/{len(pred.path)} notes below P=0.5"
             f"  ·  {_changed} moved since bias 0"
         ),
@@ -246,12 +242,12 @@ def _(fingering_rows, mo, pred, score, timbre_mix):
 def _(mo):
     mo.md(r"""
     ---
-    ### Skeleton 减字谱
+    ### Skeleton jianzipu减字谱
 
     Columns read top to bottom, right to left. Each glyph carries the three
-    things the model predicts — 弦序 below, 徽位 above, 散/泛 where the timbre
-    calls for it. The two dashed boxes are 左手指法 and 右手指法: outside the
-    system's scope, drawn empty rather than guessed. 散音 has no 左手 box
+    things the model predicts — string弦序 below, hui徽位 above, open/harmonic 散/泛 where the timbre
+    calls for it. The two dashed boxes are left hand左手指法 and right hand 右手指法: outside the
+    system's scope, drawn empty rather than guessed. open散音 has no left hand左手 box
     because an open string genuinely has no left hand.
     """)
     return
@@ -317,7 +313,7 @@ def _(mo):
 
     Same renderer as `fingerboard_en.py`, so a clip made here matches the one
     made from a GQ39 piece. The CSV is the input to the tablature layer:
-    弦 / 徽位 / 音色 is the complete output of this system. Right-hand and
+    string弦 / hui徽位 / timbre音色 is the complete output of this system. Right-hand and
     left-hand technique are outside its scope and are not inferred anywhere
     in the package, so the tablature layer renders those slots empty.
     """)
@@ -326,8 +322,7 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo, viz):
-    # mp4 needs a rasteriser AND an encoder; say so before the button is
-    # pressed rather than after a minute of rendering.
+    # mp4 needs a rasteriser AND an encoder; say so before the button is pressed rather than after a minute of rendering.
     import shutil
 
     _raster = "cairosvg"
@@ -342,7 +337,7 @@ def _(mo, viz):
         _notes.append("no SVG rasteriser — `uv add cairosvg` (mp4/gif/png unavailable)")
     if not _ffmpeg:
         _notes.append("no ffmpeg — `uv add imageio-ffmpeg`, or mp4 falls back to gif")
-    mo.md("⚠️ " + " · ".join(_notes) if _notes
+    mo.md("!! " + " · ".join(_notes) if _notes
           else f"Encoders ready: {_raster} + ffmpeg.")
     return
 

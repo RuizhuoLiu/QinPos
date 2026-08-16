@@ -20,12 +20,12 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "90175d2e462980a0a53f6615a65d523a",
+      "code_hash": "a37d9d098289be04b9160c3f4afe9d5f",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"viterbi-string-choice-vs-gq39-experts\">Viterbi string choice vs GQ39 experts</h1>\n<span class=\"paragraph\">Decodes every piece's stopped-note melody with\n<code>qinpos.viterbi.decode</code> and measures how often the predicted\nstring matches the expert annotation (from <code>data/gq39_clean.csv</code>,\nclean + repaired rows only).</span>\n<span class=\"paragraph\"><strong>Fairness</strong>: input pitch is reconstructed from the <em>notation</em>\n(degree/range/K, i.e. <code>physical - corrected residual</code>), never\nfrom the expert's physical position directly, so the decoder\nreceives exactly what a real user would provide.</span>\n<span class=\"paragraph\"><strong>Known caveat (v0)</strong>: the cleaned CSV contains stopped notes\nonly, so consecutive notes in a sequence may not be adjacent in\nthe actual piece (open/harmonic notes in between are skipped).\nThis dilutes genuine sequential signal and under-serves the arc\nfeatures; the Phase 3 evaluation should rebuild full sequences\nfrom the loader with timbre constraints.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"viterbi-string-choice-vs-gq39-experts\">Viterbi string choice vs GQ39 experts</h1></span>"
           }
         }
       ],
@@ -45,8 +45,8 @@
       "console": []
     },
     {
-      "id": "bkHC",
-      "code_hash": "98a890c0c7294d908f202eced1ed350c",
+      "id": "pCau",
+      "code_hash": "988b39bd6dacddb325085354e6d1a704",
       "outputs": [
         {
           "type": "data",
@@ -59,7 +59,47 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "967 usable stopped notes across 24 pieces\n",
+          "text": "[7.0, 7.61, 9.01, 9.99, 12.18]\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "Yghm",
+      "code_hash": "658aeaee6522d09d820764665bcb4872",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "952 952\n9d09004b95d4\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "b3c70994a7853fd0ec7392ddb3495613",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stdout",
+          "text": "952 usable stopped notes across 24 pieces\n",
           "mimetype": "text/plain"
         }
       ]
@@ -92,7 +132,7 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "majority-string baseline (always string 6): 253/967 = 26.2%\nnearest-to-hui-8.5 baseline: 451/967 = 46.6%\n",
+          "text": "majority-string baseline (always string 6): 252/952 = 26.5%\nnearest-to-hui-8.5 baseline: 445/952 = 46.7%\n",
           "mimetype": "text/plain"
         }
       ]
@@ -138,7 +178,7 @@
         {
           "type": "stream",
           "name": "stdout",
-          "text": "ciou01                31/ 62 = 50.0%\nfeng01                33/ 74 = 44.6%\ngu01                  36/ 48 = 75.0%\nguan01                16/ 33 = 48.5%\nguan02                 8/ 20 = 40.0%\nguan03                 6/  9 = 66.7%\njiou01                 7/ 36 = 19.4%\njiou02                 6/ 30 = 20.0%\njiou03                17/ 30 = 56.7%\njiou04                20/ 88 = 22.7%\njiou05                12/ 23 = 52.2%\nliang01               31/ 61 = 50.8%\nliang02               29/ 52 = 55.8%\nliang03                3/  3 = 100.0%\nsiang01               26/ 45 = 57.8%\nsiang02               15/ 32 = 46.9%\nyi01                  17/ 80 = 21.2%\nyi02                  23/ 44 = 52.3%\nyi03                  22/ 38 = 57.9%\nyi04                  37/ 48 = 77.1%\nyi05                  39/ 50 = 78.0%\nyi06                   0/ 27 =  0.0%\nyi07_modulation       10/ 17 = 58.8%\nyi07_originalmode     10/ 17 = 58.8%\n\nVITERBI (default weights): 454/967 = 46.9%\n",
+          "text": "ciou01                26/ 62 = 41.9%\nfeng01                24/ 69 = 34.8%\ngu01                  35/ 48 = 72.9%\nguan01                12/ 33 = 36.4%\nguan02                 8/ 20 = 40.0%\nguan03                 5/  9 = 55.6%\njiou01                 9/ 36 = 25.0%\njiou02                 8/ 30 = 26.7%\njiou03                12/ 30 = 40.0%\njiou04                19/ 88 = 21.6%\njiou05                 8/ 23 = 34.8%\nliang01               25/ 58 = 43.1%\nliang02               30/ 49 = 61.2%\nliang03                2/  3 = 66.7%\nsiang01               24/ 45 = 53.3%\nsiang02               14/ 32 = 43.8%\nyi01                  14/ 77 = 18.2%\nyi02                  23/ 44 = 52.3%\nyi03                  21/ 38 = 55.3%\nyi04                  32/ 48 = 66.7%\nyi05                  35/ 50 = 70.0%\nyi06                   0/ 26 =  0.0%\nyi07_modulation       10/ 17 = 58.8%\nyi07_originalmode     10/ 17 = 58.8%\n\nVITERBI (default weights): 406/952 = 42.6%\n",
           "mimetype": "text/plain"
         }
       ]
@@ -161,18 +201,18 @@
       "code_hash": "f4f59a1958875dfdfe684acfe4f65aa7",
       "outputs": [
         {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
+          "type": "error",
+          "ename": "exception",
+          "evalue": "Weights.__init__() got an unexpected keyword argument 'hand_travel'",
+          "traceback": null
         }
       ],
       "console": [
         {
           "type": "stream",
-          "name": "stdout",
-          "text": "best on grid: 458/967 = 47.4%\n  weights: side=0.4, travel=0.1, cross=0.05\n",
-          "mimetype": "text/plain"
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/tmp/marimo_1160347/__marimo__cell_Kclp_.py&quot;</span>, line <span class=\"m\">4</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">_w</span> <span class=\"o\">=</span> <span class=\"n\">Weights</span><span class=\"p\">(</span><span class=\"n\">below_center</span><span class=\"o\">=</span><span class=\"n\">_side</span><span class=\"p\">,</span> <span class=\"n\">above_center</span><span class=\"o\">=</span><span class=\"n\">_side</span><span class=\"p\">,</span>\n<span class=\"w\">    </span>             <span class=\"n\">hand_travel</span><span class=\"o\">=</span><span class=\"n\">_tr</span><span class=\"p\">,</span> <span class=\"n\">string_cross</span><span class=\"o\">=</span><span class=\"n\">_cx</span><span class=\"p\">)</span>\n<span class=\"gr\">TypeError</span>: <span class=\"n\">Weights.__init__() got an unexpected keyword argument &#39;hand_travel&#39;</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
         }
       ]
     }

@@ -158,12 +158,12 @@
     },
     {
       "id": "Kclp",
-      "code_hash": "c7ca664d5993f170eff0aa7f274e09b2",
+      "code_hash": "22436afe6ef48473b43a92ff9ca6ccba",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-ablation-grid\">4. Ablation grid</h2>\n<span class=\"paragraph\">Every row retrains from scratch with the named features frozen at\nzero, so the survivors re-fit around the absence.</span>\n<span class=\"paragraph\">The result is that the GAP tracks the arc features and nothing\nelse. Arc features condition on the model's own previous decision,\nright about half the time here; a confidently-weighted transition\nrule applied from a wrong anchor excludes the correct candidate\nrather than merely failing to help. The v6 context features read\nthe next note's candidate SET, which follows from the input melody\nand cannot be got wrong \u2014 same information, no propagation.</span>\n<span class=\"paragraph\">Bands and context both encode register-dependent string preference,\none by memorising 28 parameters and one by generalising over 5, and\n1286 training notes only support one of them.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"4-ablation-grid\">4. Ablation grid</h2>\n<span class=\"paragraph\">Every row retrains from scratch with the named features frozen at zero, so the survivors re-fit around the absence.</span>\n<span class=\"paragraph\">The GAP tracks the arc features and nothing else. Arc features condition on the model's own previous decision, right about half the time here; a confidently weighted transition rule applied from a wrong anchor excludes the correct candidate rather than merely failing to help. The v6 context features read the next note's candidate SET, which follows from the input melody and cannot be got wrong \u2014 same information, no propagation.</span>\n<span class=\"paragraph\">Bands and context both encode register-dependent string preference, one by memorising 28 parameters and one by generalising over 5, and 1286 training notes only support one of them.</span></span>"
           }
         }
       ],

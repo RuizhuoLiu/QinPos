@@ -21,16 +21,6 @@ def _(mo):
 
     Every target above
     ~55% therefore has to come from context.
-
-    Sections:
-
-    (1) oracle ceilings, the information in each context;
-
-    (2) honest backoff, what generalises from 33 pieces;
-
-    (2b) top-k, the shortlist metric;
-
-    (3-5) the three regularities that the arc and context features built on.
     """)
     return
 
@@ -114,7 +104,7 @@ def _(mo):
 
     Bucket the test notes by context key, count how many the bucket's majority realisation covers — `context_free_ceiling()` generalised past pitch-only.
 
-    `singleton` is the share of notes alone in their bucket, correct by construction; high - the ceiling is measuring memorisation rather than information.
+    `singleton` is the proportion of notes alone in their bucket, correct by construction; high - the ceiling is measuring memorisation rather than information.
     """)
     return
 
@@ -157,13 +147,9 @@ def _(mo):
     mo.md(r"""
     ## 2. Honest backoff
 
-    Fit on train, predict each test note from the most specific context
-    whose training bucket has at least `MIN_COUNT` observations, else
-    back off. This is an n-gram classifier with stupid backoff — a real
-    sequence model, and the number the CRF has to beat.
+    Fit on train, predict each test note from the most specific context whose training bucket has at least `MIN_COUNT` observations, else back off. This is an n-gram classifier with backoff — a real sequence model, and the number the CRF has to beat.
 
-    `used` shows which level fired, i.e. how often the richer context
-    was available on held-out data.
+    `used` shows which level fired, i.e. how often the richer context was available on held-out data.
     """)
     return
 
@@ -269,15 +255,10 @@ def _(mo):
     mo.md(r"""
     ## 2b. Top-k
 
-    Exact match asks for the one realisation the performer happened to
-    play, which is unfair on a task with real ambiguity: pitch 14 has
-    five distinct expert realisations, and naming a different valid one
-    scores the same as naming an unplayable one. Top-k asks whether the
-    expert's choice is in the shortlist — the honest framing for a
-    system whose output is a suggestion.
+    Exact matching requires that the performer precisely reproduce the specific way of realization. However, in tasks with actual ambiguity, this is unfair: for pitch 14, there are five different expert realizations, and indicating a different valid realization has the same score as indicating an unplayable realization.
+    Top-k asks whether the expert's choice is in the shortlist — the honest framing for a system that outputs suggestions.
 
-    `coverage` is the share of notes whose bucket held at least k
-    realisations; below that, top-k saturates for structural reasons.
+    `coverage` is the share of notes whose bucket held at least k realisations; below that, top-k saturates for structural reasons.
     """)
     return
 
@@ -350,14 +331,12 @@ def _(
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## 3. 泛音段 structure
+    ## 3. 泛音段 Harmonic section structure
 
-    Testing whether harmonics are sectional (泛起 … 泛止) rather than
-    isolated, which in a chain model means P(harmonic | prev harmonic)
+    Testing whether harmonics are sectional (泛起 … 泛止) rather than isolated, which in a chain model means P(harmonic | prev harmonic)
     far above P(harmonic).
 
-    A flat `is_harmonic` node cost cannot make the second harmonic of a
-    passage cheaper than the first; `harm_run`/`harm_enter`/`harm_exit`
+    A flat `is_harmonic` node cost cannot make the second harmonic of a passage cheaper than the first; `harm_run`/`harm_enter`/`harm_exit`
     can. 散音 is the negative control.
     """)
     return
@@ -418,11 +397,9 @@ def _(mo):
     ## 4. Repeated pitches
 
     Error analysis on ciou01 found the expert alternating timbre on
-    repeated pitches (散7弦 → 按5弦10徽 → 散7弦, five times in one
-    piece) while the model held one fingering.
+    repeated pitches (散7弦 → 按5弦10徽 → 散7弦, open 7 → string 5 hui 10 → open 7, five times in one piece) while the model held one fingering.
 
-    A context-free model maps pitch to a single realisation, so it
-    always repeats; the expert's repeat rate is therefore a hard bound
+    A context-free model maps pitch to a single realisation, so it always repeats; the expert's repeat rate is therefore a hard bound
     on its accuracy at those notes. `repeat_identical` captures this.
     """)
     return
@@ -470,12 +447,9 @@ def _(mo):
     ## 5. Left-hand geometry
 
     A linear slope on |Δposition| can only say "further is worse", and
-    misses two shapes: the 走手音 range (1-3 hui, where 上/下/绰/注/吟/猱
-    live) may be *preferred* over staying put, and crossing to an
-    adjacent string at the same hui barely moves the finger at all.
+    misses two shapes: the 走手音 range (a technique that left-hand movement with a range of 1-3 hui can be decorative expressions, where 上/下/绰/注/吟/猱 live) may be *preferred* over staying put, and crossing to an adjacent string at the same hui barely moves the finger at all.
 
-    Answered by the `travel_*` buckets and `same_hui_cross`. Read the
-    two tables against each other — they are the "按音走弦、泛音走徽"
+    Answered by the `travel_*` buckets and `same_hui_cross`. Read the two tables against each other — they are the across string when play stopped, and hui across when play harmonic "按音走弦、泛音走徽"
     contrast.
     """)
     return
@@ -525,27 +499,6 @@ def _(Counter, seqs):
 
     geometry(seqs, kinds=("stopped",))
     geometry(seqs, kinds=("harmonic",))
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Findings
-
-    * **Next-pitch context generalises, previous-pitch does not.** Both
-      have near-identical oracle ceilings (71.8% vs 69.1%) and bucket
-      counts, but honest backoff keeps +7.8pp from the next pitch and
-      +0.2pp from the previous one. Useful context is anticipatory,
-      which is a direct argument for forward-backward over any
-      left-to-right model.
-    * **Top-1 is not the right target.** Backoff reaches 53.3% at k=1
-      and 79.4% at k=3. The 70-80% goal is met on the shortlist metric,
-      which is also the honest one for a suggestion system.
-    * **The oracle-honest gap is corpus size.** Both-pitches context
-      has 90.1% oracle against 49.7% honest across 233 buckets for 433
-      notes. Expanding the corpus outranks further model refinement.
-    """)
     return
 
 

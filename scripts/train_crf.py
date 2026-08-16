@@ -195,20 +195,11 @@ def _(mo):
     mo.md(r"""
     ## 4. Ablation grid
 
-    Every row retrains from scratch with the named features frozen at
-    zero, so the survivors re-fit around the absence.
+    Every row retrains from scratch with the named features frozen at zero, so the survivors re-fit around the absence.
 
-    The result is that the GAP tracks the arc features and nothing
-    else. Arc features condition on the model's own previous decision,
-    right about half the time here; a confidently-weighted transition
-    rule applied from a wrong anchor excludes the correct candidate
-    rather than merely failing to help. The v6 context features read
-    the next note's candidate SET, which follows from the input melody
-    and cannot be got wrong — same information, no propagation.
+    The GAP tracks the arc features and nothing else. Arc features condition on the model's own previous decision, right about half the time here; a confidently weighted transition rule applied from a wrong anchor excludes the correct candidate rather than merely failing to help. The v6 context features read the next note's candidate SET, which follows from the input melody and cannot be got wrong — same information, no propagation.
 
-    Bands and context both encode register-dependent string preference,
-    one by memorising 28 parameters and one by generalising over 5, and
-    1286 training notes only support one of them.
+    Bands and context both encode register-dependent string preference, one by memorising 28 parameters and one by generalising over 5, and 1286 training notes only support one of them.
     """)
     return
 

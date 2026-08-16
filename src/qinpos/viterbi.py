@@ -231,13 +231,7 @@ def arc_features(a: Candidate, b: Candidate, hand=_UNSET) -> dict[str, float]:
 # Weights (Path A: hand-crafted starting point; Path B learns these)
 @dataclass(frozen=True)
 class Weights:
-    """Hand-crafted Path A weights.
-
-    The v5 arc defaults are deliberately mild and are NOT the result
-    reported anywhere: they exist so decode() is usable before training
-    and so `train(init=Weights())` has a sane start. Every claim in the
-    write-up should come from learned weights.
-    """
+    """Hand-crafted Path A weights."""
 
     is_open: float = -0.3  # mild preference for resonant open strings
     is_harmonic: float = 0.0  # neutral unless the score demands 泛音

@@ -276,10 +276,7 @@ def _(mo):
     ## Manual review: needs_review notes (NOT counted as usable for training)
 
     These don't fit the piece's primary (convention, degree4_reading, K),
-    aren't a confirmed real gong-string shift, and degree 4's theory
-    exception doesn't apply (either the note isn't degree 4, or degree 4
-    was already tried and still didn't fit). There's no principled reason
-    to auto-accept these — they need a look against the original score.
+    aren't a confirmed real gong-string shift. need to be checked
     """)
     return
 

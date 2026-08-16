@@ -167,21 +167,13 @@ def _board_body(
     expert: Any | None = None,
     baseline: Any | None = None,
     cjk: bool = True,
-    bilingual: bool = False,
     title: str | None = None,
     subtitle: str | None = None,
     prob_threshold: float = 0.10,
     show_legend: bool = True,
-) -> tuple[list[str], float, float]:
+) -> list[str]:
     p: list[str] = []
     k = geom.width / 980.0  # stroke/radius scale factor
-    second = geom.font * 0.74            # size of the secondary-language line
-    # Label size is not a constant, so the space reserved for labels cannot be
-    # either: a second line of hui numbers collides with the legend, and a
-    # latin string label is wider than the gap beside the nut. Report both
-    # instead of assuming, or the labels are silently clipped.
-    extra_h = (second + 4) * k if bilingual else 0.0
-    left_pad = (46.0 if (bilingual or not cjk) else 0.0) * k
 
     if title:
         p.append(
@@ -221,12 +213,6 @@ def _board_body(
             f"<text x='{x:.1f}' y='{geom.y_hui_label:.1f}' fill='{PALETTE['label']}' "
             f"font-size='{geom.font * 0.92:.1f}' text-anchor='middle'>{_esc(lab)}</text>"
         )
-        if bilingual:
-            p.append(
-                f"<text x='{x:.1f}' y='{geom.y_hui_label + (second + 3) * k:.1f}' "
-                f"fill='{PALETTE['label']}' opacity='0.62' font-size='{second:.1f}' "
-                f"text-anchor='middle'>{h}</text>"
-            )
 
     # strings, 1 thickest
     for s in range(1, 8):
@@ -235,21 +221,14 @@ def _board_body(
             f"<line x1='{geom.x_nut - 14 * k:.1f}' y1='{yy:.1f}' x2='{geom.x_bridge + 6 * k:.1f}' "
             f"y2='{yy:.1f}' stroke='{PALETTE['string']}' stroke-width='{(3.4 - 0.35 * (s - 1)) * k:.2f}'/>"
         )
-        lab = f"{s}弦" if cjk else f"str {s}"
-        ly = yy + (4 - (second * 0.5 if bilingual else 0)) * k
+        lab = f"{s}string弦" if cjk else f"str {s}"
         p.append(
-            f"<text x='{geom.x_nut - 30 * k:.1f}' y='{ly:.1f}' fill='{PALETTE['label']}' "
+            f"<text x='{geom.x_nut - 30 * k:.1f}' y='{yy + 4 * k:.1f}' fill='{PALETTE['label']}' "
             f"font-size='{geom.font:.1f}' text-anchor='end'>{_esc(lab)}</text>"
         )
-        if bilingual:
-            p.append(
-                f"<text x='{geom.x_nut - 30 * k:.1f}' y='{ly + (second + 2) * k:.1f}' "
-                f"fill='{PALETTE['label']}' opacity='0.62' font-size='{second:.1f}' "
-                f"text-anchor='end'>str {s}</text>"
-            )
 
     if not marginals:
-        return p, extra_h, left_pad
+        return p
 
     argmax = max(marginals, key=lambda c: marginals[c])
     used_labels: dict[tuple[int, int], int] = {}
@@ -326,14 +305,13 @@ def _board_body(
 
     if show_legend:
         p.extend(_legend(geom, cjk, with_expert=expert is not None,
-                         with_baseline=baseline is not None, dy=extra_h))
-    return p, extra_h, left_pad
+                         with_baseline=baseline is not None))
+    return p
 
 
-def _legend(geom: Geometry, cjk: bool, with_expert: bool, with_baseline: bool = False,
-            dy: float = 0.0) -> list[str]:
+def _legend(geom: Geometry, cjk: bool, with_expert: bool, with_baseline: bool = False) -> list[str]:
     k = geom.width / 980.0
-    y = geom.y_legend + dy
+    y = geom.y_legend
     x = geom.x_nut - 14 * k
     p: list[str] = []
     items = [("stopped", PALETTE["stopped"]), ("harmonic", PALETTE["harmonic"]), ("open", PALETTE["open"])]
@@ -395,20 +373,18 @@ def render_fingerboard(
     baseline: Any | None = None,
     geom: Geometry = Geometry(),
     cjk: bool = True,
-    bilingual: bool = False,
     title: str | None = None,
     subtitle: str | None = None,
     prob_threshold: float = 0.10,
     show_legend: bool = True,
 ) -> str:
     """One fingerboard with every candidate lit by its marginal probability."""
-    body, extra_h, left_pad = _board_body(
+    body = _board_body(
         marginals, hui_fractions, geom, expert=expert, baseline=baseline,
-        cjk=cjk, bilingual=bilingual, title=title, subtitle=subtitle,
+        cjk=cjk, title=title, subtitle=subtitle,
         prob_threshold=prob_threshold, show_legend=show_legend,
     )
-    return _wrap(body, geom.width, geom.height + extra_h, cjk, rounded=12,
-                 left_pad=left_pad)
+    return _wrap(body, geom.width, geom.height, cjk, rounded=12)
 
 
 # confidence profile
@@ -486,15 +462,11 @@ def render_confidence_profile(
     return _wrap(body, geom.width, height, cjk, rounded=8)
 
 
-def _wrap(body: list[str], width: float, height: float, cjk: bool, rounded: int = 10,
-          left_pad: float = 0.0) -> str:
-    x0 = -left_pad
-    total = width + left_pad
+def _wrap(body: list[str], width: float, height: float, cjk: bool, rounded: int = 10) -> str:
     head = (
-        f"<svg xmlns='http://www.w3.org/2000/svg' width='{total:.0f}' height='{height:.0f}' "
-        f"viewBox='{x0:.0f} 0 {total:.0f} {height:.0f}' font-family=\"{_font(cjk)}\">"
-        f"<rect x='{x0:.0f}' width='{total:.0f}' height='{height:.0f}' rx='{rounded}' "
-        f"fill='{PALETTE['page']}'/>"
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{width:.0f}' height='{height:.0f}' "
+        f"viewBox='0 0 {width:.0f} {height:.0f}' font-family=\"{_font(cjk)}\">"
+        f"<rect width='{width:.0f}' height='{height:.0f}' rx='{rounded}' fill='{PALETTE['page']}'/>"
     )
     return head + "".join(body) + "</svg>"
 
@@ -511,7 +483,6 @@ def render_frame(
     baselines: Sequence[Any] | None = None,
     geom: Geometry = Geometry(),
     cjk: bool = True,
-    bilingual: bool = False,
     title: str | None = None,
     subtitle: str | None = None,
     with_profile: bool = True,
@@ -527,23 +498,22 @@ def render_frame(
     baseline = None
     if baselines is not None and index < len(baselines):
         baseline = baselines[index]
-    body, extra_h, left_pad = _board_body(
+    body = _board_body(
         marginals_all[index], hui_fractions, geom, expert=expert,
-        baseline=baseline, cjk=cjk, bilingual=bilingual, title=title,
-        subtitle=subtitle,
+        baseline=baseline, cjk=cjk, title=title, subtitle=subtitle,
     )
-    total_h = geom.height + extra_h
+    total_h = geom.height
     if with_profile:
         prof = _profile_body(marginals_all, geom, experts, index, profile_height,
                              cjk, True, changed)
-        body.append(f"<g transform='translate(0,{total_h:.1f})'>" + "".join(prof) + "</g>")
+        body.append(f"<g transform='translate(0,{geom.height:.1f})'>" + "".join(prof) + "</g>")
         total_h += profile_height
 
     total_w = geom.width
     if side_panel:
         body.append(f"<g transform='translate({geom.width:.1f},0)'>{side_panel}</g>")
         total_w += side_panel_width
-    return _wrap(body, total_w, total_h, cjk, rounded=12, left_pad=left_pad)
+    return _wrap(body, total_w, total_h, cjk, rounded=12)
 
 
 # statistics helpers

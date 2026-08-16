@@ -21,8 +21,7 @@ from pathlib import Path
 from .candidates import candidates_for
 from .learn import PieceSequence, WeightVector, gold_path
 from .theory import Candidate, Note
-from .viterbi import (FEATURES, _next_hand, arc_cost, melody_context,
-                      node_cost, path_features)
+from .viterbi import FEATURES, _next_hand, arc_cost, melody_context, node_cost, path_features
 
 
 def _logsumexp(values: list[float]) -> float:
@@ -46,7 +45,7 @@ def _lattice(notes: list[Note], kinds=None) -> list[list[Candidate]]:
 
 
 def forward_backward(cols: list[list[Candidate]], w, ctx=None):
-"""Forward-backward (candidate, hand) expansion."""
+    """Forward-backward (candidate, hand) expansion."""
     n = len(cols)
     if ctx is None:
         ctx = [None] * n
@@ -92,9 +91,7 @@ def forward_backward(cols: list[list[Candidate]], w, ctx=None):
                 t = cur_index.get(key)
                 if t is None:
                     continue
-                terms.append(-node_cost(cur, w, ctx[i + 1])
-                             - arc_cost(prev_cand, cur, w, hand)
-                             + betas[i + 1][t])
+                terms.append(-node_cost(cur, w, ctx[i + 1]) - arc_cost(prev_cand, cur, w, hand) + betas[i + 1][t])
             out.append(_logsumexp(terms))
         betas[i] = out
 
@@ -234,9 +231,7 @@ def note_marginals(notes: list[Note], w, kinds=None) -> list[dict[Candidate, flo
                 key = (j, _next_hand(hand, cur))
                 t = cur_index.get(key)
                 if t is not None:
-                    terms.append(-node_cost(cur, w, ctx[i + 1])
-                                 - arc_cost(prev_cand, cur, w, hand)
-                                 + betas[i + 1][t])
+                    terms.append(-node_cost(cur, w, ctx[i + 1]) - arc_cost(prev_cand, cur, w, hand) + betas[i + 1][t])
             out.append(_logsumexp(terms))
         betas[i] = out
 

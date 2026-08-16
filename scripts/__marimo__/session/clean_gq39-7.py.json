@@ -177,12 +177,12 @@
     },
     {
       "id": "Hstk",
-      "code_hash": "eed2d8fe900827e09742b3c2f98f8f01",
+      "code_hash": "70854ade0bee412c9378c1806cde92b6",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-needs_review-notes-not-counted-as-usable-for-training\">Manual review: needs_review notes (NOT counted as usable for training)</h2>\n<span class=\"paragraph\">These don't fit the piece's primary (convention, degree4_reading, K),\naren't a confirmed real gong-string shift, and degree 4's theory\nexception doesn't apply (either the note isn't degree 4, or degree 4\nwas already tried and still didn't fit). There's no principled reason\nto auto-accept these \u2014 they need a look against the original score.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"manual-review-needs_review-notes-not-counted-as-usable-for-training\">Manual review: needs_review notes (NOT counted as usable for training)</h2>\n<span class=\"paragraph\">These don't fit the piece's primary (convention, degree4_reading, K),\naren't a confirmed real gong-string shift. need to be checked</span></span>"
           }
         }
       ],

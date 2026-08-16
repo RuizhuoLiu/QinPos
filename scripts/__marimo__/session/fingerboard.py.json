@@ -20,12 +20,12 @@
     },
     {
       "id": "MJUe",
-      "code_hash": "b21d8c7278c4c66643f2f22191491927",
+      "code_hash": "a71a9162f15e8409c3730be03175d82e",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"fingerboard-viewer-crf-marginal-heatmap-on-a-physically-true\">Fingerboard viewer \u2014 CRF marginal heatmap on a physically true \u7434\u9762</h1>\n<span class=\"paragraph\">Every \u5fbd below sits at its real string-length fraction\n(<code>theory.HUI_FRACTIONS</code>): \u5fbd\u4e03 at 1/2, \u5fbd\u4e5d at 2/3, and so on, so a qin\nplayer recognises the geometry immediately.</span>\n<span class=\"paragraph\">For the selected note every playable candidate lights up with opacity\nproportional to its CRF marginal probability (<code>crf.note_marginals</code>): one\nbright dot means the model is confident, several half-lit dots mean the\nnote is genuinely ambiguous \u2014 which is exactly where a human expert would\nalso have a choice. The annotated realisation is drawn as a dashed ring.</span>\n<span class=\"paragraph\">The two bias sliders reweight \u6563\u97f3 / \u6cdb\u97f3 at <strong>inference</strong> time\n(<code>WeightVector.biased</code>), i.e. a difficulty control: fewer open strings and\nharmonics generally means a harder, more left-hand-heavy fingering.\nMarginals recompute live.</span>\n<span class=\"paragraph\">All drawing lives in <code>qinpos.viz</code>, so the export section at the bottom\nrenders exactly what you see here \u2014 no second implementation to drift.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"fingerboard-viewer-crf-marginal-heatmap-on-a-physically-true-guqin-surface\">Fingerboard viewer \u2014 CRF marginal heatmap on a physically true guqin surface\u7434\u9762</h1>\n<span class=\"paragraph\">Every hui\u5fbd below sits at its real string-length fraction\n(<code>theory.HUI_FRACTIONS</code>): 7 hui\u5fbd\u4e03 at 1/2, 9 hui\u5fbd\u4e5d at 2/3, and so on, so a qin\nplayer recognises the geometry immediately.</span>\n<span class=\"paragraph\">For the selected note every playable candidate lights up with opacity\nproportional to its CRF marginal probability (<code>crf.note_marginals</code>): one\nbright dot means the model is confident, several half-lit dots mean the\nnote is genuinely ambiguous \u2014 which is exactly where a human expert would\nalso have a choice. The annotated realisation is drawn as a dashed ring.</span>\n<span class=\"paragraph\">The two bias sliders reweight \u6563\u97f3 / \u6cdb\u97f3 at <strong>inference</strong> time\n(<code>WeightVector.biased</code>), i.e. a difficulty control: fewer open strings and\nharmonics generally means a harder, more left-hand-heavy fingering.\nMarginals recompute live.</span></span>"
           }
         }
       ],
@@ -183,12 +183,12 @@
     },
     {
       "id": "nWHF",
-      "code_hash": "ec6b0248a6139ae3beded2d8ebb92fcb",
+      "code_hash": "935032a1f1e6900198c18a1bc8b0ec2e",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><hr />\n<h2 id=\"export-for-presentations\">Export for presentations</h2>\n<ul>\n<li><strong>piece walkthrough</strong> \u2014 one frame per note, board plus a playhead moving\n  through the confidence profile. This is the \"watch the model read the\n  score\" clip.</li>\n<li><strong>bias sweep</strong> \u2014 one note held fixed while \u6563\u97f3/\u6cdb\u97f3 bias runs from \u22122 to\n  +2. Shows the fingering migrating between timbres, i.e. the difficulty\n  knob, in about eight seconds.</li>\n<li><strong>still figure</strong> \u2014 the current frame as vector SVG for the dissertation.</li>\n</ul>\n<span class=\"paragraph\"><code>mp4</code> needs ffmpeg (<code>brew install ffmpeg</code>) and an SVG rasteriser\n(<code>uv add cairosvg</code>, or <code>resvg</code> / <code>rsvg-convert</code> on PATH). <code>html</code> needs\nnothing at all and is the safe fallback if the venue laptop is not yours.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><hr />\n<h2 id=\"export-for-presentations\">Export for presentations</h2>\n<ul>\n<li><strong>piece walkthrough</strong> \u2014 one frame per note, board plus a playhead moving\n  through the confidence profile. This is the \"watch the model read the\n  score\" clip.</li>\n<li><strong>bias sweep</strong> \u2014 one note held fixed while open/harmonic \u6563\u97f3/\u6cdb\u97f3 bias runs from \u22122 to\n  +2. Shows the fingering migrating between timbres, i.e. the difficulty\n  knob, in about eight seconds.</li>\n<li><strong>still figure</strong> \u2014 the current frame as vector SVG for the dissertation.</li>\n</ul></span>"
           }
         }
       ],

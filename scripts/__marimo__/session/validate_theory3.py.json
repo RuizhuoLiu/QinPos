@@ -8,14 +8,7 @@
     {
       "id": "Hbol",
       "code_hash": "1d0db38904205bec4d6f6f6a1f6cec3e",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
@@ -34,48 +27,20 @@
     {
       "id": "vblA",
       "code_hash": "28742237114087d68ba223d01a154ffe",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "bkHC",
       "code_hash": "64841f6d62b14cf1a3457929fa5a851a",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "lEQa",
       "code_hash": "a09c9ea4bd9235d7c404031d33ea67b1",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "/home/s5523505/Desktop/SEM/MasterProject/QinPos/data/GQ39/score_annotation True\nloaded 2410 events\n1208 stopped notes\n",
-          "mimetype": "text/plain"
-        }
-      ]
+      "outputs": [],
+      "console": []
     },
     {
       "id": "PKri",
@@ -93,37 +58,23 @@
     {
       "id": "Xref",
       "code_hash": "0d37f93ab163912615f6bc6de3339f52",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "SFPL",
       "code_hash": "debf8c0de7033b6f8251ccea206923f9",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
+      "outputs": [],
       "console": []
     },
     {
       "id": "BYtC",
-      "code_hash": "b5dff18911c2d1cea98e57e270f1326d",
+      "code_hash": "1ba9cd81405f00d091b933f0a1f8d877",
       "outputs": [
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"overall-agreement-convention-at1-no-per-piece-k-yet\">Overall agreement (convention = \"at1\", no per-piece K yet)</h2>\n<span class=\"paragraph\"><code>frac</code>: how far the piece's raw median offset sits from the\nnearest integer. </span>\n<span class=\"paragraph\">A large <code>frac</code>: this piece likely needs the \"at5\" convention or has a real modulation, since plain \"at1\" is failing to land on a clean gong offset.</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"overall-agreement-convention-at1-no-per-piece-k-yet\">Overall agreement (convention = \"at1\", no per-piece K yet)</h2>\n<span class=\"paragraph\"><code>frac</code>: how far the piece's raw median offset sits from the\nnearest integer.</span>\n<span class=\"paragraph\">A large <code>frac</code>: this piece likely needs the \"at5\" convention or has a real modulation, since plain \"at1\" is failing to land on a clean gong offset.</span></span>"
           }
         }
       ],
@@ -132,22 +83,8 @@
     {
       "id": "RGSE",
       "code_hash": "05d9bd67c71c5a2e7474704d86e2485b",
-      "outputs": [
-        {
-          "type": "data",
-          "data": {
-            "text/plain": ""
-          }
-        }
-      ],
-      "console": [
-        {
-          "type": "stream",
-          "name": "stdout",
-          "text": "piece                   K   frac  agree  flag\n----------------------------------------------\nciou01                -12   0.02  85.0%  \nfeng01                -12   0.02  90.7%  \ngu01                  -12   0.02  98.0%  \nguan01                 -7   0.00  63.6%  LOW_AGREE \nguan02                 -7   0.00  75.0%  LOW_AGREE \nguan03                 -7   0.02  55.6%  LOW_AGREE \njiou01                 -7   0.02  58.8%  LOW_AGREE \njiou02                 -7   0.02  54.8%  LOW_AGREE \njiou03                 -7   0.02  80.0%  \njiou04                 -7   0.02  65.1%  LOW_AGREE \njiou05                 -7   0.02  52.2%  LOW_AGREE \nliang01                -7   0.00  60.0%  LOW_AGREE \nliang02                -7   0.00  58.8%  LOW_AGREE \nliang03                -7   0.02 100.0%  \nsiang01               -12   0.02  84.4%  \nsiang02               -12   0.02  90.6%  \nyang01                -14   0.02  71.1%  LOW_AGREE \nyang02                -14   0.02  78.0%  LOW_AGREE \nyang03                -14   0.02  73.7%  LOW_AGREE \nyi01                  -12   0.18  57.5%  LOW_AGREE \nyi02                  -12   0.18 100.0%  \nyi03                  -12   0.17  97.4%  \nyi04                  -12   0.00  93.5%  \nyi05                  -12   0.00  96.2%  \nyi06                  -12   0.18  88.9%  \nyi07_modulation        -7   0.02  76.5%  LOW_AGREE \nyi07_originalmode     -12   0.02  94.1%  \nyu02                  -14   0.02  55.0%  LOW_AGREE \nyu03                  -14   0.02  54.9%  LOW_AGREE \n\nOVERALL: 916/1208 = 75.8%\n\n=== needs manual review (sorted by suspicion) ===\n  yi01                 frac=0.18 agree=57.5% K=-12\n  jiou05               frac=0.02 agree=52.2% K=-7\n  yu02                 frac=0.02 agree=55.0% K=-14\n  yang01               frac=0.02 agree=71.1% K=-14\n  yang03               frac=0.02 agree=73.7% K=-14\n  yi07_modulation      frac=0.02 agree=76.5% K=-7\n  jiou02               frac=0.02 agree=54.8% K=-7\n  yu03                 frac=0.02 agree=54.9% K=-14\n  guan03               frac=0.02 agree=55.6% K=-7\n  jiou01               frac=0.02 agree=58.8% K=-7\n  jiou04               frac=0.02 agree=65.1% K=-7\n  yang02               frac=0.02 agree=78.0% K=-14\n  liang02              frac=0.00 agree=58.8% K=-7\n  liang01              frac=0.00 agree=60.0% K=-7\n  guan01               frac=0.00 agree=63.6% K=-7\n  guan02               frac=0.00 agree=75.0% K=-7\n",
-          "mimetype": "text/plain"
-        }
-      ]
+      "outputs": [],
+      "console": []
     }
   ]
 }
