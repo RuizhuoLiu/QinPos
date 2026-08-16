@@ -1,22 +1,4 @@
-"""Fingerboard visualisation and presentation exports for QinPos.
-
-This module is deliberately model-free: it only knows how to turn
-`{candidate: probability}` mappings into SVG, and how to turn a list of SVG
-frames into a video / GIF / self-contained HTML player.  Nothing here imports
-marimo, `crf` or `learn`, so the same code can be driven from a notebook, a
-unit test, or a batch script that renders figures for the dissertation.
-
-A "candidate" is any object exposing ``.string`` (1-7), ``.kind``
-("open" | "stopped" | "harmonic") and ``.position`` (hui position as a float,
-e.g. 7.6 for 七徽六分).
-
-Coordinate convention
----------------------
-Hui fractions in `theory.HUI_FRACTIONS` are string-length fractions measured
-from the 岳山 (bridge / speaking end).  hui 7 = 1/2, hui 9 = 2/3, hui 13 = 7/8.
-Fraction 0.0 therefore sits at the 岳山 and 1.0 at the 龙龈, which is how the
-board is laid out below: x_bridge on the right, x_nut on the left.
-"""
+"""Fingerboard visualisation and presentation exports for QinPos."""
 
 from __future__ import annotations
 
@@ -47,25 +29,22 @@ __all__ = [
 ]
 
 
-# --------------------------------------------------------------------------
 # geometry and palette
-# --------------------------------------------------------------------------
-
 
 @dataclass(frozen=True)
 class Geometry:
     """All layout constants in one place so figures can be rescaled."""
 
     width: float = 980.0
-    x_nut: float = 70.0          # 龙龈 end, string-length fraction 1.0
-    x_bridge: float = 930.0      # 岳山 end, string-length fraction 0.0
+    x_nut: float = 70.0          # 龙龈 end (guqin's tail), string-length fraction 1.0
+    x_bridge: float = 930.0      # 岳山 start (guqin's head), string-length fraction 0.0
     y_top: float = 48.0          # top edge of the board
     y_first: float = 94.0        # centre line of string 1
     y_step: float = 32.0         # vertical spacing between strings
     font: float = 13.0
     dot: float = 9.0             # radius of a stopped-note marker
 
-    # -- derived ----------------------------------------------------------
+    # derived
     @property
     def y_last(self) -> float:
         return self.y_first + 6 * self.y_step
@@ -140,10 +119,7 @@ def _esc(text: str) -> str:
     return (str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
-# --------------------------------------------------------------------------
 # candidate accessors (defensive: works with dataclasses or namedtuples)
-# --------------------------------------------------------------------------
-
 
 def _string_of(c: Any) -> int:
     return int(getattr(c, "string"))
@@ -157,10 +133,7 @@ def _position_of(c: Any) -> float:
     return float(getattr(c, "position", 0.0) or 0.0)
 
 
-# --------------------------------------------------------------------------
 # horizontal placement
-# --------------------------------------------------------------------------
-
 
 def hui_x(fraction: float, geom: Geometry) -> float:
     """x pixel for a string-length fraction measured from the 岳山."""
@@ -171,8 +144,7 @@ def position_x(position: float, hui_fractions: Mapping[int, Any], geom: Geometry
     """x pixel for a hui position such as 7.6 (七徽六分).
 
     Interpolates linearly in *string length* between the two bracketing hui,
-    which is what 徽分 means in practice.  Positions above hui 13 extrapolate
-    towards the 龙龈 (fraction 1.0).
+    which is what hui, fen 徽分 means in practice.  Positions above hui 13 extrapolate towards the 龙龈 (fraction 1.0).
     """
     h = int(position)
     fen = float(position) - h
@@ -187,11 +159,7 @@ def candidate_x(c: Any, hui_fractions: Mapping[int, Any], geom: Geometry) -> flo
     return position_x(_position_of(c), hui_fractions, geom)
 
 
-# --------------------------------------------------------------------------
 # board body
-# --------------------------------------------------------------------------
-
-
 def _board_body(
     marginals: Mapping[Any, float],
     hui_fractions: Mapping[int, Any],
@@ -253,7 +221,7 @@ def _board_body(
             f"<line x1='{geom.x_nut - 14 * k:.1f}' y1='{yy:.1f}' x2='{geom.x_bridge + 6 * k:.1f}' "
             f"y2='{yy:.1f}' stroke='{PALETTE['string']}' stroke-width='{(3.4 - 0.35 * (s - 1)) * k:.2f}'/>"
         )
-        lab = f"{s}弦" if cjk else f"str {s}"
+        lab = f"{s}string弦" if cjk else f"str {s}"
         p.append(
             f"<text x='{geom.x_nut - 30 * k:.1f}' y='{yy + 4 * k:.1f}' fill='{PALETTE['label']}' "
             f"font-size='{geom.font:.1f}' text-anchor='end'>{_esc(lab)}</text>"
@@ -410,13 +378,7 @@ def render_fingerboard(
     prob_threshold: float = 0.10,
     show_legend: bool = True,
 ) -> str:
-    """One fingerboard with every candidate lit by its marginal probability.
-
-    `baseline` is a single Candidate drawn as a faint dashed ring: the choice
-    the SAME model makes with the bias sliders at zero. Without it a slider
-    move is unreadable, because the board shows where the model ended up but
-    not what it moved away from.
-    """
+    """One fingerboard with every candidate lit by its marginal probability."""
     body = _board_body(
         marginals, hui_fractions, geom, expert=expert, baseline=baseline,
         cjk=cjk, title=title, subtitle=subtitle,
@@ -425,10 +387,7 @@ def render_fingerboard(
     return _wrap(body, geom.width, geom.height, cjk, rounded=12)
 
 
-# --------------------------------------------------------------------------
 # confidence profile
-# --------------------------------------------------------------------------
-
 
 def _profile_body(
     marginals_all: Sequence[Mapping[Any, float]],
@@ -512,9 +471,7 @@ def _wrap(body: list[str], width: float, height: float, cjk: bool, rounded: int 
     return head + "".join(body) + "</svg>"
 
 
-# --------------------------------------------------------------------------
-# composite frame (board + profile) -- this is what the video uses
-# --------------------------------------------------------------------------
+# composite frame (board + profile) - this is what the video uses
 
 
 def render_frame(
@@ -554,18 +511,12 @@ def render_frame(
 
     total_w = geom.width
     if side_panel:
-        # Anything self-contained can ride along here -- the tablature glyph
-        # for this note is the intended passenger. viz stays unaware of what
-        # it is drawing, so jianzipu is not imported into this module.
         body.append(f"<g transform='translate({geom.width:.1f},0)'>{side_panel}</g>")
         total_w += side_panel_width
     return _wrap(body, total_w, total_h, cjk, rounded=12)
 
 
-# --------------------------------------------------------------------------
 # statistics helpers
-# --------------------------------------------------------------------------
-
 
 def summarise(
     marginals_all: Sequence[Mapping[Any, float]],
@@ -600,15 +551,13 @@ def summarise(
 
 
 def most_ambiguous(marginals_all: Sequence[Mapping[Any, float]], n: int = 6) -> list[int]:
-    """Indices of the least confident notes -- the ones worth asking a 琴人 about."""
+    """Indices of the least confident notes - the ones worth asking a 琴人 about."""
     scored = [(max(m.values()) if m else 0.0, i) for i, m in enumerate(marginals_all)]
     scored.sort()
     return [i for _, i in scored[:n]]
 
 
-# --------------------------------------------------------------------------
 # rasterisation and export
-# --------------------------------------------------------------------------
 
 
 class ExportError(RuntimeError):
@@ -652,8 +601,7 @@ def svg_to_jpg_bytes(
     background: str = "#ffffff",
     quality: int = 92,
 ) -> bytes:
-    """Rasterise to JPEG. Flattens onto an opaque background first, because
-    JPEG has no alpha channel and transparent pixels otherwise come out black."""
+    """Rasterise to JPEG."""
     from io import BytesIO
 
     try:

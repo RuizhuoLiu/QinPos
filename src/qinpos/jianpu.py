@@ -1,8 +1,8 @@
 """Parse numbered notation (简谱) into the decoder's Note sequence.
 
-The model works in *relative* pitch space -- semitones above the open 1st
-string -- so the absolute key of the score is irrelevant to the fingering
-decision. What matters is where 宫 sits, which in 正调 is the open 3rd string.
+The model works in *relative* pitch space (semitones above the open 1st
+string) so the absolute key of the score is irrelevant to the fingering
+decision. What matters is where gong宫 sits, which in at5正调 is the open 3rd string.
 A `1=F` header is therefore accepted and remembered for display, but it does
 not change a single decision.
 
@@ -40,10 +40,10 @@ Token grammar (in this order)::
 
 Unmarked octave holds 三弦散音 (1) up to 七弦散音 (6), i.e. the seven open
 strings of 正调 are exactly ``5, 6, 1 2 3 5 6`` -- the same convention
-`learn._notated` calls "at5".
+`learn._notated`: "at5".
 
 Duration is parsed and carried on the Note, but no feature in `viterbi.py`
-reads it: it exists for the fingering table and for future rhythm features.
+reads it: it exists for the fingering table and for future works.
 """
 
 from __future__ import annotations
@@ -110,12 +110,7 @@ class ParsedScore:
         return [t for t in self.tokens if t.kind == "note"]
 
     def unplayable(self) -> list[tuple[int, Note, str]]:
-        """Notes the lattice cannot express, with a diagnosis each.
-
-        `decode` raises on an empty column, so this must be checked before
-        inference on user input -- unlike GQ39, an arbitrary melody is under
-        no obligation to fit on the instrument.
-        """
+        """Notes the lattice cannot express, with a diagnosis each."""
         out = []
         for i, n in enumerate(self.notes):
             if candidates_for(n):
@@ -124,9 +119,9 @@ class ParsedScore:
                 why = ("below the open 1st string (the instrument's floor); "
                        "raise this note an octave or transpose the piece up")
             elif n.is_harmonic and not candidates_for(Note(n.semitones)):
-                why = "no 泛音 on any string matches this pitch"
+                why = "no harmonic泛音 on any string matches this pitch"
             elif n.is_harmonic:
-                why = "no 泛音 node produces this pitch; let the model choose the timbre"
+                why = "no harmonic泛音 node produces this pitch; let the model choose the timbre"
             else:
                 why = ("above the highest practical stopped position "
                        "(hui 2 on the 7th string); lower it an octave")
@@ -141,7 +136,7 @@ def format_pitch(semitones: float, gong: int = 5) -> str:
     within = rel - 12 * octave
     names = {v: k for k, v in DEGREE_SEMITONES.items()}
     base = names.get(round(within))
-    if base is None:  # 偏音 that is not a diatonic degree: describe it as sharp
+    if base is None:  # semitone 偏音 that is not a diatonic degree: describe it as sharp
         lower = max((s for s in names if s <= within), default=0)
         base = f"#{names[lower]}"
     marks = "'" * octave if octave > 0 else "," * (-octave)
@@ -155,9 +150,6 @@ def parse_jianpu(text: str) -> ParsedScore:
 
     for lineno, raw_line in enumerate(text.splitlines(), start=1):
         # `//` starts a comment anywhere on the line, not only at the start:
-        # annotating a phrase from its right-hand end is the natural thing to
-        # do when editing a score, and silently parsing the annotation as
-        # notes loses music while only warning about the words.
         line = raw_line.split("//", 1)[0].strip()
         if not line:
             continue
@@ -266,12 +258,9 @@ def parse_jianpu(text: str) -> ParsedScore:
 
 
 EXAMPLE = """\
-// A SYNTHETIC demo phrase, not a transcription of any published score.
-// It exists to give the parser and the app something to chew on out of the
-// box: 正调, pentatonic, a short 泛音 passage, and a range that fits the
-// instrument. Do not present it as a real piece — use a GQ39 export
+// A random demo phrase, not a transcription of any published score.
 // (scripts/gq39_to_jianpu.py) when the notes themselves need to be right.
-title: demo phrase (synthetic)
+title: demo phrase (random)
 key: 1=F
 gong_string: 3
 
@@ -281,9 +270,7 @@ gong_string: 3
 """
 
 
-# --------------------------------------------------------------------------
 # fitting an arbitrary tune onto the instrument
-# --------------------------------------------------------------------------
 
 
 def _relative_degrees(score: ParsedScore) -> list[tuple[float, bool | None]]:
@@ -322,18 +309,7 @@ def fit_options(
     transposes: Iterable[int] = (-24, -12, 0, 12, 24),
     gong_strings: Iterable[int] = (1, 2, 3, 4, 5, 6, 7),
 ) -> list[dict]:
-    """Which (gong_string, transpose) settings make the whole tune playable.
-
-    Only two moves preserve the piece as written on a 正调 instrument: shift it
-    by whole octaves, or put 宫 on a different open string. The second is 借调
-    -- playing another mode without retuning -- and it is the move that rescues
-    a tune sitting slightly outside the qin's range. Shifting by a number of
-    semitones that is not a multiple of 12 would move 宫 off an open string
-    altogether, which is a different instrument, so it is not offered here.
-
-    Returns rows sorted best-first: fewest unplayable notes, then closest to
-    what the score already asks for.
-    """
+    """Which (gong_string, transpose) settings make the whole tune playable."""
     rel = _relative_degrees(score)
     current_gong = score.gong_string
     try:
@@ -366,11 +342,7 @@ def fit_options(
 
 
 def suggest_header(score: ParsedScore) -> str | None:
-    """Header lines that would make the tune playable, or None if it already is.
-
-    Returned as text to paste at the top of the score, because that keeps the
-    fix visible in the source rather than hidden in a widget.
-    """
+    """Header lines that would make the tune playable, or None if it already is."""
     if not score.notes or not score.unplayable():
         return None
     best = fit_options(score)[0]

@@ -1,101 +1,5 @@
 """Viterbi decoding over the candidate lattice.
-
-[VERSION 5]
-    v1 (design_history/viterbi_v1_cramped_only.py, 17.4%): one-sided
-       "cramped above hui 5" penalty; no force toward the expert's
-       hui 7-10 region, decoder drifted to low strings.
-    v2 (design_history/viterbi_v2_comfort_band.py, 23.2%): flat comfort
-       band [5, 10]; no gradient inside the band where most decisions
-       happen, so arc terms decided everything and it drifted.
-    v3 (design_history/viterbi_v3_center_pull.py, 49.7% hand-crafted):
-       two-sided linear pull toward CENTER_HUI = 8.5.
-    v4 (design_history/viterbi_v4_hand_state.py): (a) hand position
-       carried through non-stopped notes via a (candidate, hand) DP
-       state; (b) string x hui-band crossed node features. Result:
-       node-only 48.5% exact, full model WITH arc features 40.6% --
-       the arc features were worth -7.9pp and an arc-scale sweep
-       improved monotonically toward zero weight.
-    v5 (this file): the arc features are rebuilt.
-
-WHY v4's ARC FEATURES FAILED
-----------------------------
-v4 charged three things: |Delta string|, linear |Delta position|, and a
-flat "landing" cost. All three model PHYSICAL EFFORT, inherited from
-the plucked/bowed-string fingering literature (Sayegh 1989;
-Radisavljevic and Driessen 2004), where "do not move the hand" is the
-dominant constraint.
-
-On the guqin it is not. Error analysis on ciou01 (v4 weights, test
-split) found the expert repeatedly alternating timbre on REPEATED
-PITCHES while the model held one fingering:
-
-    notes 13/14/15   expert  散7弦  -> 按5弦10徽 -> 散7弦
-    notes 35/36/37   expert  散6弦  -> 按4弦10徽 -> 散6弦
-    notes 48/49/50   expert  散7弦  -> 按5弦10徽 -> 散7弦
-    notes 67/68/69   expert  散6弦  -> 按4弦10徽 -> 散6弦
-    notes 74/75/76   expert  散7弦  -> 按5弦10徽 -> 散7弦
-
-The model predicted the SAME realisation for all three notes of each
-group. Alternating costs MORE physical effort, and the expert does it
-anyway: the driver is timbre contrast, not economy. A cost function
-that only knows "moving is expensive" cannot represent this, and the
-best it can do is switch itself off -- which is exactly what the arc
-weight sweep found.
-
-WHAT v5 ADDS
-------------
-Three families, all learnable, none hand-tuned into the result:
-
-  (a) REPETITION. `repeat_identical` fires when consecutive notes use
-      the identical (string, position, kind). Two adjacent notes can
-      only share a realisation if they share a pitch, so this is a
-      pitch-free encoding of "the same note played the same way twice"
-      and needs no change to any caller's signature. A positive learned
-      weight reproduces the alternation above; a negative one would say
-      guqin players prefer to repeat. The data decides.
-
-  (b) TIMBRE-RUN STRUCTURE. 泛音 passages are sectional in guqin
-      practice -- harmonics arrive as a marked passage (泛起 ... 泛止),
-      not as isolated events. `harm_run` / `harm_enter` / `harm_exit`
-      let the model learn a low within-passage cost and a high entry
-      and exit cost, which is what "sectional" means in a chain model.
-      `open_run` is the same construction for 散音.
-
-  (c) NON-MONOTONIC TRAVEL. v4's linear `hand_travel` can only say
-      "further is worse", one slope for everything. The real profile is
-      not monotonic: a 1-3 hui move on one string is the home ground of
-      the 走手音 techniques (上, 下, 绰, 注, 吟, 猱) and is musically
-      preferred over staying put, while an 8-hui jump is genuinely
-      expensive. Four indicator buckets give the model a free-form
-      shape over distance. `same_hui_cross` covers the other cheap
-      move a linear term cannot see: crossing to an adjacent string at
-      the same hui, where the finger barely relocates at all.
-
-v5 also completes the v4-era harmonic fix. `_next_hand` was updated to
-let harmonics set the hand position, but `arc_features` still gated
-travel on `b.kind == "stopped"`, so harmonic-to-harmonic travel was
-still charged zero and consecutive harmonics could teleport. Travel now
-fires for any fingered (non-open) target.
-
-Framework follows Sayegh (1989): fingering assignment as a minimum-cost
-path through a per-note candidate lattice, solved by dynamic programming.
-
-Costs are structured as  weight . feature  (a linear model):
-    total_cost(path) = sum_i  w . f_node(c_i)  +  sum_i  w . f_arc(c_{i-1}, c_i, hand_i)
-so Phase 3 (path-difference learning, Radisavljevic and Driessen, 2004)
-can replace hand-crafted weights with learned ones without touching the
-decoder: the gradient of total cost w.r.t. w is the feature-count
-difference between the expert path and the current best path.
-
-CONSISTENCY REQUIREMENT: decode_lattice() and path_features() must
-derive `hand` identically, or the learner's target features describe a
-path the decoder scores differently and the perceptron drifts. Both go
-through _next_hand(); do not inline that logic anywhere else. crf.py
-imports _next_hand/node_cost/arc_cost from here for the same reason.
-
-Complexity: O(n * S^2 * H) for n notes, S candidates per note (S <= ~12)
-and H distinct live hand positions. H is capped by `beam_width`, so
-decoding stays linear in n.
+the arc features are rebuilt.
 """
 
 from __future__ import annotations
@@ -105,14 +9,11 @@ from dataclasses import dataclass
 from .candidates import candidates_for
 from .theory import Candidate, Note
 
-# ---------------------------------------------------------------------------
 # Feature extraction
-# ---------------------------------------------------------------------------
 # Node features (about one candidate in isolation):
 #   is_open       : 1 if 散音 (free left hand, resonant) else 0
 #   is_harmonic   : 1 if 泛音 else 0
-#   below_center  : max(0, 8.5 - position) for stopped notes -- pull
-#                   toward the hui-8.5 home region from the yueshan side
+#   below_center  : max(0, 8.5 - position) for stopped notes -- pull toward the hui-8.5 home region from the yueshan side
 #   above_center  : max(0, position - 8.5) -- pull from the nut side
 #   string_1..7   : one-hot marker of which string a candidate uses
 #   sb_{s}_{b}    : string s crossed with hui band b, stopped notes only
@@ -122,10 +23,8 @@ from .theory import Candidate, Note
 #                     two ADJACENT notes regardless of timbre
 #   reposition      : 1 when entering a stopped note from open/harmonic
 #   travel_s_*      : one-hot bucket of |position - hand| when entering
-#   travel_h_*        a stopped (_s_) or harmonic (_h_) note, where hand
-#                     is the last fingered position at or before the
-#                     previous note. Buckets, not a slope, so the cost
-#                     of distance can be non-monotonic; split by target
+#   travel_h_*        a stopped (_s_) or harmonic (_h_) note, where hand is the last fingered position at or before the
+#                     previous note. Buckets, not a slope, so the cost of distance can be non-monotonic; split by target
 #                     timbre because the two geometries differ.
 #   string_cross_harm: |Δstring| again, but only inside a 泛音段
 #   harm_run        : 1 when both notes are 泛音 (inside a 泛音段)
@@ -135,8 +34,7 @@ from .theory import Candidate, Note
 #   repeat_identical: 1 when both notes use the same (string, position,
 #                     kind) -- i.e. a repeated pitch played identically
 #   same_hui_cross  : 1 when two notes sit at the same hui on different
-#   same_hui_cross_harm  strings (finger barely relocates); _harm is the
-#                     same event inside a 泛音段, where it is the single
+#   same_hui_cross_harm  strings (finger barely relocates); _harm is the same event inside a 泛音段, where it is the single
 #                     most common transition in the corpus
 
 # Coarse hui bands. Boundaries chosen from the GQ39 expert position

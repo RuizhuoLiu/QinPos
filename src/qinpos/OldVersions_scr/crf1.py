@@ -1,29 +1,8 @@
 """Linear-chain CRF over the (candidate, hand) fingering lattice.
 
-Upgrade learn.py: the same linear score -> log-potential of a conditional random field,
-    P(path | melody) = exp(-cost(path)) / Z(melody), #low cost, high possibility
-    Z = sum over all lattice paths of exp(-cost).
+The perceptron - single argmax path; the CRF - probability,
+per-note MARGINALS defined - good for the fingerboard visualisation.
 
-Training minimises the negative log-likelihood of the expert path,
-gradient is the difference between the expert and the model expectation:
-
-    d NLL / d w  =  f(gold) - E_P[f]
-    w  <-  w - lr * (f(gold) - E_P[f] + l2 * w)
-
-(The perceptron - single argmax path; the CRF - probability,
-per-note MARGINALS defined - good for the fingerboard visualisation.)
-
-Inference is EXACT: no beam. Measured max states per column on GQ39 is 246,
-so exact inference is cheap.
-
-State-transition structure (mirrors viterbi._next_hand):
-    * one state per stopped candidate;
-    * open/harmonic candidates keep the incoming hand -> one state per
-      (candidate, distinct incoming hand).
-
-CONSISTENCY: this module derives hand via viterbi._next_hand and scores
-via viterbi.node_cost/arc_cost, so a path's probability here always
-agrees with the cost the decoder assigns it.
 """
 
 from __future__ import annotations
@@ -59,17 +38,13 @@ def _lattice(notes: list[Note], kinds=None) -> list[list[Candidate]]:
 
 
 def forward_backward(cols: list[list[Candidate]], w):
-    """Exact forward-backward over the (candidate, hand) expansion.
-
-    Returns (logZ, expected_features) where expected_features is the
-    model expectation E_P[f] over the full path distribution.
-    """
+    """Forward-backward (candidate, hand) expansion."""
     n = len(cols)
     # states[i]: list of (j, hand); alpha/beta: parallel lists of logs
     states: list[list[tuple[int, float | None]]] = []
     alphas: list[list[float]] = []
 
-    # ---- forward ----
+    # forward
     first: dict[tuple[int, float | None], float] = {}
     for j, c in enumerate(cols[0]):
         key = (j, _next_hand(None, c))
@@ -92,7 +67,7 @@ def forward_backward(cols: list[list[Candidate]], w):
 
     logZ = _logsumexp(alphas[-1])
 
-    # ---- backward ----
+    # backward
     betas: list[list[float]] = [[] for _ in range(n)]
     betas[n - 1] = [0.0] * len(states[n - 1])
     for i in range(n - 2, -1, -1):
@@ -111,7 +86,7 @@ def forward_backward(cols: list[list[Candidate]], w):
             out.append(_logsumexp(terms))
         betas[i] = out
 
-    # ---- expectations ----
+    # expectations
     exp_f = {k: 0.0 for k in FEATURES}
 
     # node terms: marginal of each state, summed into its candidate's features
@@ -143,14 +118,13 @@ def forward_backward(cols: list[list[Candidate]], w):
                 for name, v in arc_features(prev_cand, cur, hand).items():
                     if v:
                         exp_f[name] += p * v
-    return logZ, exp_f
+    return logZ, exp_f  # expected_features is the model expectation
 
 
 def nll_and_grad(seq: PieceSequence, w, gold: list[Candidate] | None = None):
     """NLL of the gold path and its gradient wrt w.
 
-    gold defaults to learn.gold_path(seq, w): the expert pinned wherever
-    reachable, best completion elsewhere -- always a real lattice path.
+    gold defaults to learn.gold_path(seq, w): the expert pinned wherever reachable, best completion elsewhere
     """
     if gold is None:
         gold = gold_path(seq, w)
@@ -172,18 +146,11 @@ def train_crf(
     seed: int = 0,
     verbose: bool = True,
 ) -> WeightVector:
-    """Adagrad SGD on the CRF negative log-likelihood, one piece/step.
+    """Adagrad SGD on the CRF negative log-likelihood, one piece/step. Adagrad (per-feature adaptive step, Duchi et al. 2011)
+    Since the features live on wildly different scales:
+        string/band - 0/1, hand_travel sums 10 of hui per piece.
 
-    Adagrad (per-feature adaptive step, Duchi et al. 2011) rather than
-    a global learning rate, because the features live on wildly
-    different scales: one-hot string/band indicators contribute 0/1 per
-    note while hand_travel sums tens of hui per piece. A single global
-    rate either underfits the small-scale features or blows up the
-    large-scale ones -- exactly the underfitting observed with plain
-    SGD (26.6% vs the perceptron's 40.8%).
-
-    l2 regularisation matters more here than for the perceptron: NLL
-    keeps pushing weights outward as long as the model is not certain,
+    l2 regularisation keeps pushing weights outward as long as the model is not certain,
     and ~20 training pieces will happily overfit without it.
     """
     rng = random.Random(seed)
@@ -208,17 +175,15 @@ def train_crf(
 
 
 def note_marginals(notes: list[Note], w, kinds=None) -> list[dict[Candidate, float]]:
-    """Per-note marginal probability of each CANDIDATE (hands summed out).
+    """Per-note marginal probability of each candidate
 
-    This is the visualisation API: for note i, a dict mapping each
-    playable Candidate to P(candidate_i = c | melody). Probabilities in
-    each dict sum to 1.
+    For visualisation: for note i, a dict mapping each playable Candidate to P(candidate_i = c | melody).
+    Probabilities in each dict sum to 1.
     """
     cols = _lattice(notes, kinds)
     n = len(cols)
     # rerun forward-backward but keep per-state marginals
-    # (duplicate of forward_backward's internals kept separate so the
-    #  training path stays lean; both call the same scorers)
+    # (duplicate of forward_backward but separate so the training path stays lean; both call the same scorers)
     states: list[list[tuple[int, float | None]]] = []
     alphas: list[list[float]] = []
     first: dict[tuple[int, float | None], float] = {}

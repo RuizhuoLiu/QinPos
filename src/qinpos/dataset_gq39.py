@@ -6,24 +6,13 @@ Columns consumed per event row:
     'L tech (timbre)'    -> 1 = harmonic, 2 = open, 3 = stopped
 
 Messy realities handled:
-    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in
-      one cell, either as strings '2,3,5' or floats 3.6 (Excel turned a
-      comma into a decimal point on integer columns). Exploded here
-      into simultaneous events sharing an onset.
+    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in one cell, either as strings '2,3,5' or floats 3.6
+    (Excel turned a comma into a decimal point on integer columns). Exploded here into simultaneous events sharing an onset.
     * `position` mixes float / str / 0 (open).
-    * `position` can ALSO be a packed pair where Excel collapsed a
-      comma the same way, but hui values run 1-13 (two digits for
-      10-13), so a packed pair like "10,12" collapses to the float
-      10.12 — naively reading only the first digit after the decimal
-      point recovers (10, 1), silently dropping the second digit of
-      "12". We try both a one-digit and a two-digit reading and keep
-      whichever falls inside the physically playable hui range.
-    * A row's packed fields (degree/range/string/position) can
-      disagree in how many values they hold (e.g. 3 degrees packed
-      but only 2 positions given). There is no reliable way to infer
-      the missing value, so these rows are skipped with a printed
-      warning rather than silently padded by repeating the last
-      value, which would fabricate a note that isn't in the source.
+    * `position` when hui values run 1-13 (two digits for 10-13), so a packed pair like "10,12" collapses to the float 10.12 then became (10, 1).
+      try both a one-digit and a two-digit reading, keep whichever falls inside the physically playable hui range.
+    * A row's packed fields (degree/range/string/position) can disagree in how many values they hold 
+     (e.g. 3 degrees packed but only 2 positions given). - skipped with warning
     * Legend text in trailing columns is ignored.
 """
 
@@ -37,11 +26,7 @@ import pandas as pd
 TIMBRE = {1: "harmonic", 2: "open", 3: "stopped"}
 KEEP = ["degree", "range", "onset", "string", "position", "L tech (timbre)"]
 
-# Practical playable hui range (matches candidates.py's
-# STOPPED_MIN_HUI/STOPPED_MAX_HUI): below hui ~2 the string is too
-# short/tense to stop cleanly, so a one-digit reading that lands below
-# this is almost certainly the wrong half of a packed position pair.
-MIN_HUI = 2.0
+MIN_HUI = 2.0 # STOPPED_MIN_HUI/STOPPED_MAX_HUI): below hui ~2 the string is too tense to stop cleanly
 MAX_HUI = 13.9
 
 
@@ -59,26 +44,15 @@ class Event:
     range_: int
     string: int
     position: float
-    kind: str            # open | stopped | harmonic | ?
+    kind: str            # open | stopped | harmonic 
     onset: float
     multi: bool = False    # part of a chord / sweep
     suspect: bool = False  # position was repaired from a period-packed cell
 
 
 def _values(cell, integer_column: bool) -> list[float]:
-    """Parse a cell into a list of numeric values.
-
-    integer_column=True means the column semantically holds integers
-    (degree, range, string, timbre), so a fractional value like 3.6 must
-    be the packed pair (3, 6) — the annotator's comma became a period.
-    This applies whether the cell arrived as a FLOAT (Excel numeric) or
-    as TEXT ('3.6'): before this fix, text cells were only split on
-    commas, so '6.1' fell through to float('6.1') and int() truncation
-    silently DROPPED the second chord note.
-
-    position is NOT such a column: 7.9 is a real hui.fen value there.
-    Period-vs-comma disambiguation for position needs the multi-note
-    context and happens in _explode, not here.
+    """2 strings: 3.6 -> (3, 6)
+    1 string: 7.9 is a real
     """
     if isinstance(cell, str):
         text = cell.replace("\uff0c", ",")
@@ -94,15 +68,6 @@ def _values(cell, integer_column: bool) -> list[float]:
 
 
 def _split_packed_position(v: float) -> tuple[float, float]:
-    """Reconstruct a packed position pair from a single collapsed float.
-
-    The second packed value may have been a one-digit fen (e.g. 8.7 ->
-    8, 7) or a two-digit hui (e.g. 10.12 -> 10, 12) — both look like
-    "take the decimal part" but need different scaling. We try both
-    and prefer whichever lands inside the playable hui range; if both
-    or neither do, we fall back to the one-digit reading (matches
-    prior behaviour, and is the far more common case in practice).
-    """
     a = int(v)
     frac = v - a
     one_digit = round(frac * 10)
@@ -124,17 +89,13 @@ def _explode(row) -> list[tuple]:
 
     n = max(map(len, (degrees, ranges, strings, timbres)))
 
-    # Count-consistency rule for the ambiguous position column:
-    # if the OTHER columns say this row holds n>1 notes but position
-    # parsed to a single value with a fractional part (e.g. '8.7'),
-    # the period is almost certainly a mistyped comma — '8.7' means
-    # positions (8, 7), one per note. Internal evidence: rows where the
-    # annotator DID type the comma (e.g. '7,6.5') sit right next to
-    # period rows in the same sheet, and the split reading is the only
-    # physically possible one when both notes share a string (two
-    # different degrees cannot sound at the same position on the same
-    # string). Rows repaired this way are flagged suspect=True so the
-    # cleaning stage can double-check them against the physics.
+    """Count-consistency rule for the ambiguous position column:
+    if the row holds n>1 notes, but position parsed to a single fractional (e.g. '8.7'),
+    it should be comma, '8.7' means positions (8, 7), one per note. 
+    
+    Internal evidence: both comma and period appear (e.g. '7,6.5') - both notes share a string 
+    (two different degrees cannot sound at the same position on the same string). 
+    will be flagged suspect=True"""
     suspect = False
     if n > 1 and len(positions) == 1 and positions[0] != int(positions[0]):
         positions = list(_split_packed_position(positions[0]))
@@ -142,14 +103,7 @@ def _explode(row) -> list[tuple]:
 
     n = max(n, len(positions))
 
-    # Length-consistency check: any field with more than one packed
-    # value must agree on the note count. A field with exactly one
-    # value is fine (it's shared/broadcast across all notes — e.g. a
-    # chord on one onset with a single shared timbre code). But two
-    # fields that both packed >1 value and disagree (e.g. 3 degrees
-    # against 2 positions) mean the row itself is ambiguous — padding
-    # by repeating the last value would fabricate a note not present
-    # in the source, so we refuse to guess.
+    # Length-consistency check: number of values need to be consistent.
     lengths = {"degree": len(degrees), "range": len(ranges),
                "string": len(strings), "position": len(positions)}
     packed_lengths = {name: l for name, l in lengths.items() if l > 1}

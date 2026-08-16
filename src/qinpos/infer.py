@@ -1,16 +1,13 @@
 """Inference on melodies that are not in GQ39.
 
-`learn.build_sequences` couples a melody to its expert annotation, which is
-right for training and useless for a user who just typed a tune in. Everything
-here takes a bare `list[Note]` and gives back a fingering plus the marginals
-that drive the fingerboard view.
+learn.build_sequences ties a melody to its expert fingering: useful for training, but useless for a user. 
+So everything here works from a bare list[Note] and returns a fingering plus the marginals for the fingerboard view.
 
-Nothing in `viterbi.node_features` / `arc_features` reads pitch or duration
-directly -- the features are all about string, hui band, travel and timbre --
-so the trained weights apply to any melody in 正调 relative pitch space
-without retraining. What does *not* transfer is coverage: the weights were
-fitted on 34 pieces of largely pentatonic material, so a melody full of 偏音
-is extrapolation, not interpolation.
+viterbi.node_features and arc_features never read pitch or duration directly—only string, hui band, travel, and timbre. 
+So the trained weights work on any melody in trained tune relative pitch space without retraining.
+
+What doesn't transfer: the weights were fitted on 34 mostly pentatonic pieces. A melody full of turned tune 偏音 is extrapolation, 
+not interpolation.
 """
 
 from __future__ import annotations
@@ -66,20 +63,7 @@ def predict(
     kinds: list[str | None] | None = None,
     baseline_w=None,
 ) -> Prediction:
-    """Decode a melody and compute its marginals under the same weights.
-
-    `kinds` forces a timbre per note (from 泛/散 markings in the score);
-    None entries leave the choice to the model.
-
-    `baseline_w` is the reference the bias sliders are compared against --
-    pass the unbiased weight vector to get `changed_vs_baseline` populated,
-    which is what makes the difficulty control legible: the interesting fact
-    is not where the biased model puts each note, it is which notes moved.
-
-    Decoding uses beam_width=0 (exact). The default beam of 64 exists for
-    long GQ39 pieces; a typed-in melody is short enough that there is no
-    reason to let the decoder and the marginals disagree.
-    """
+    """Decode a melody and compute its marginals under the same weights."""
     missing = [i for i, n in enumerate(notes) if not candidates_for(n)]
     if missing:
         raise ValueError(
@@ -126,8 +110,8 @@ def left_hand_finger(c: Candidate, previous: Candidate | None = None) -> str:
 
     Common teaching practice, not a rule of physics: the thumb (大指) takes
     the region from the yueshan to about hui 7, the ring finger (名指) takes
-    hui 7 to the nut, and 泛音 are usually touched with 名指 low on the board
-    and 中指/大指 higher up. Real fingering also depends on 绰注, 上下,
+    hui 7 to the nut, and harmonic 泛音 are usually touched with 名指 low on the board
+    and middel finger 中指/大指 higher up. Real fingering also depends on 绰注, 上下,
     slides and the following note, none of which this looks at.
 
     It is here so the tablature layer has something to print; it needs a
@@ -157,7 +141,7 @@ def fingering_rows(
             "jianpu": tokens[i].raw if tokens else "",
             "semitones": round(note.semitones, 2),
             "timbre": KIND_CN[c.kind],
-            "string": f"{CN_NUM[c.string]}弦",
+            "string": f"{CN_NUM[c.string]}string弦",
             "position": hui_fen_text(c.position) or "—",
             "P": round(m.get(c, 0.0), 3),
             "alternatives": " / ".join(

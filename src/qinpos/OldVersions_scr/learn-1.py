@@ -1,19 +1,10 @@
-"""Phase 3: path-difference weight learning (Radisavljevic and Driessen,
+"""path-difference weight learning (Radisavljevic and Driessen,
 2004 style, implemented as an averaged structured perceptron).
 
 Idea: the decoder's cost is linear, cost(path) = w · features(path).
-If the decoder's best path differs from the expert's, move w so the
-expert path gets relatively cheaper:
+If the decoder's best path differs from the expert's, move w so the expert path gets relatively cheaper:
 
     w  <-  w + lr * (features(pred) - features(expert))
-
-Training sequences are FULL melodies rebuilt from the loader. Open 散音
-and harmonic 泛音 events included, with NO timbre constraint given to
-the decoder. So the learned is_open / is_harmonic weights encode when
-experts actually choose those timbres. This fixes the Phase 2 caveat
-(stopped-only sequences with gaps) and is also what makes the
-user-facing "difficulty" bias possible: an offset to is_open / is_harmonic
-shifts how often the decoder chooses open/harmonic 散/泛.
 """
 
 from __future__ import annotations
@@ -52,9 +43,8 @@ def _snap(note: Note, gold: Candidate) -> tuple[Candidate | None, float]:
 
 # Weight vector: dict-backed, duck-types viterbi. Weights via .dot()
 class WeightVector(dict):
-    """Mutable weight vector over viterbi.FEATURES. Any object with a
-    .dot(features) method works as `w` for the decoder, so learned
-    vectors plug into decode() unchanged."""
+    """Mutable weight vector over viterbi.FEATURES.
+    Any with .dot(features) method works as `w` for the decoder, so learned vectors plug into decode() unchanged."""
 
     def __init__(self, init=None):
         super().__init__({k: 0.0 for k in FEATURES})
@@ -74,8 +64,8 @@ class WeightVector(dict):
         return out
 
     def biased(self, open_bias: float = 0.0, harmonic_bias: float = 0.0) -> "WeightVector":
-        """User-facing style control: negative bias makes 散音/泛音
-        cheaper (decoder chooses them more), positive makes them rarer. difficulty slider."""
+        """User-facing style control: negative bias makes 散音/泛音 opem/harmonic cheaper (decoder chooses them more),
+        positive makes them rarer. difficulty slider."""
         out = self.copy()
         out["is_open"] += open_bias
         out["is_harmonic"] += harmonic_bias
@@ -89,7 +79,7 @@ class PieceSequence:
     notes: list[Note]  # decoder input (pitch only, no timbre)
     expert: list[Candidate]  # snapped to lattice where possible
     scored: list[bool]  # accuracy
-    reachable: list[bool]  # can be expressed?
+    reachable: list[bool]  # can be expressed or not
 
 
 def _notated(degree: int, range_: int, convention: str, d4: int) -> float:
@@ -99,16 +89,7 @@ def _notated(degree: int, range_: int, convention: str, d4: int) -> float:
 
 
 def build_sequences(data_dir: Path, clean_csv: Path) -> list[PieceSequence]:
-    """Rebuild full melodies (open + stopped + harmonic, in idx order).
-
-    Pitch source per event:
-      * stopped notes present in the cleaned CSV: physical, corrected
-        residual (handles repaired ranges and alt_gong K automatically);
-        scored unless status == needs_review.
-      * open / harmonic: scored only if the expert's annotated
-        choice is physically consistent with that pitch.
-    Events with unknown timbre (kind '?') are dropped.
-    """
+    """Rebuild full melodies (open + stopped + harmonic, in idx order)."""
     rows = list(csv.DictReader(clean_csv.open()))
     piece_params: dict[str, tuple[str, int, int]] = {}
     stopped_info: dict[tuple[str, str, int], dict] = {}
@@ -156,7 +137,7 @@ def build_sequences(data_dir: Path, clean_csv: Path) -> list[PieceSequence]:
             raw = Candidate(e.string, float(e.position), e.kind)
             snapped, dist = _snap(note, raw)
             notes.append(note)
-            expert.append(snapped or raw)  # 不可达时保留原标注,仅用于报告
+            expert.append(snapped or raw)
             scored.append(ok)
             reachable.append(snapped is not None)
         seqs.append(PieceSequence(piece, notes, expert, scored))
@@ -187,9 +168,9 @@ def train(train_seqs: list[PieceSequence], epochs: int = 15, lr: float = 0.05, i
 
 
 def evaluate(seqs: list[PieceSequence], w, kinds_known: bool = False) -> dict[str, float]:
-    """Accuracy over scored notes. kinds_known=True feeds the expert's
-    timbre as a lattice constraint (string-choice-only protocol,
-    comparable to the Phase 2 eval); False is full free choice."""
+    """Accuracy over scored notes.
+    kinds_known=True feeds the expert's timbre as a lattice constraint
+    False - full free choice."""
     n = kind_ok = string_ok = both_ok = 0
     for seq in seqs:
         kinds = [c.kind for c in seq.expert] if kinds_known else None

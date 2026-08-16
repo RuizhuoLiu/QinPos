@@ -1,43 +1,12 @@
-"""Phase 3: path-difference weight learning (Radisavljevic and Driessen,
+"""path-difference weight learning (Radisavljevic and Driessen,
 2004 style, implemented as an averaged structured perceptron).
 
-Idea: the decoder's cost is linear, cost(path) = w . features(path).
-If the decoder's best path differs from the expert's, move w so the
-expert path gets relatively cheaper:
+Idea: the decoder's cost is linear, cost(path) = w · features(path).
+If the decoder's best path differs from the expert's, move w so the expert path gets relatively cheaper:
 
-    w  <-  w + lr * (features(pred) - features(gold))
+    w  <-  w + lr * (features(pred) - features(expert))
 
-Training sequences are FULL melodies rebuilt from the loader. Open 散音
-and harmonic 泛音 events included, with NO timbre constraint given to
-the decoder. So the learned is_open / is_harmonic weights encode when
-experts actually choose those timbres. This fixes the Phase 2 caveat
-(stopped-only sequences with gaps) and is also what makes the
-user-facing "difficulty" bias possible: an offset to is_open / is_harmonic
-shifts how often the decoder chooses open/harmonic 散/泛.
-
-Reachability
-------------
-PD learning assumes the expert path exists inside the DP graph. Here it
-may not: candidates_for() computes positions from just intonation, while
-the expert's annotated position carries transcription noise, so the two
-never match exactly. Feeding the raw annotation as the learning target
-would push below_center / above_center toward a path the decoder can
-never produce.
-
-Two mechanisms address this:
-
-  * _snap() locates the lattice candidate that corresponds to the
-    expert's annotation, and the SNAPPED candidate becomes the target.
-    Its existence is recorded per note in PieceSequence.reachable.
-  * gold_path() pins the expert only where reachable and leaves the rest
-    free, then re-decodes. The learning target is therefore always a
-    real path through the lattice (latent structured perceptron).
-
-reachable and scored are DIFFERENT axes and are kept separate:
-  scored    = is the annotation trustworthy?      (data quality)
-  reachable = can the system express it at all?   (candidate generation)
-A note with scored=True, reachable=False is a candidate-generation gap
-and is an upper bound on achievable accuracy, not a decoder error.
++ reachability
 """
 
 from __future__ import annotations
@@ -53,26 +22,15 @@ from .dataset_gq39 import load_all
 from .theory import DEGREE_SEMITONES, HARMONIC_SEMITONES_AT_HUI, OPEN_STRING_SEMITONES, Candidate, Note
 from .viterbi import FEATURES, decode, decode_lattice, path_features
 
-# Pieces with physically altered tuning (紧五弦). Out of scope for the
-# standard-tuning (正调) system. Same as clean_gq39.
+# Pieces with physically altered tuning (紧五弦).Out of scope for the standard-tuning (正调) system. same as clean_gq39.
 EXCLUDED_TUNING_PIECES = {"yang01", "yang02", "yang03", "yu02", "yu03"}
 
-# Maximum |annotated position - computed position| still treated as the
-# same fingering, in hui units. PROVISIONAL: set these from the measured
-# distribution printed by reach_report(), not by guesswork. Hui spacing
-# is not linear, so a single tolerance is a simplification -- if the
-# distribution is strongly kind-dependent or position-dependent, revisit.
 SNAP_TOL = {"open": float("inf"), "harmonic": 0.3, "stopped": 0.4}
 
 
 def _snap(note: Note, gold: Candidate) -> tuple[Candidate | None, float]:
     """Find the lattice candidate matching the expert's annotation.
-
-    Returns (candidate, distance). candidate is None when no candidate
-    shares the expert's (kind, string), or when the closest one is
-    further than SNAP_TOL. The distance is returned either way so the
-    near-misses can be inspected.
-    """
+    Returns (candidate, distance) or (None, inf) if unreachable."""
     best, best_d = None, float("inf")
     for c in candidates_for(note):
         if c.kind != gold.kind or c.string != gold.string:
@@ -87,9 +45,8 @@ def _snap(note: Note, gold: Candidate) -> tuple[Candidate | None, float]:
 
 # Weight vector: dict-backed, duck-types viterbi.Weights via .dot()
 class WeightVector(dict):
-    """Mutable weight vector over viterbi.FEATURES. Any object with a
-    .dot(features) method works as `w` for the decoder, so learned
-    vectors plug into decode() unchanged."""
+    """Mutable weight vector over viterbi.FEATURES.
+    Any with .dot(features) method works as `w` for the decoder, so learned vectors plug into decode() unchanged."""
 
     def __init__(self, init=None):
         super().__init__({k: 0.0 for k in FEATURES})
@@ -109,9 +66,8 @@ class WeightVector(dict):
         return out
 
     def biased(self, open_bias: float = 0.0, harmonic_bias: float = 0.0) -> "WeightVector":
-        """User-facing style control: negative bias makes 散音/泛音
-        cheaper (decoder chooses them more), positive makes them rarer.
-        Backend of the difficulty slider."""
+        """User-facing style control: negative bias makes 散音/泛音 open/harmonic cheaper (decoder chooses them more),
+        positive makes them rarer. Backend of the difficulty slider."""
         out = self.copy()
         out["is_open"] += open_bias
         out["is_harmonic"] += harmonic_bias
@@ -136,21 +92,18 @@ def _notated(degree: int, range_: int, convention: str, d4: int) -> float:
 
 
 def build_sequences(data_dir: Path, clean_csv: Path) -> list[PieceSequence]:
-    """Rebuild full melodies (open + stopped + harmonic, in idx order).
-
-    Pitch source per event:
-      * stopped notes present in the cleaned CSV: physical minus the
-        corrected residual (handles repaired ranges and alt_gong K
-        automatically); scored unless status == needs_review.
-      * open / harmonic: notation formula with the piece's fitted
-        (convention, degree4, K); scored only if the expert's annotated
-        choice is physically consistent with that pitch.
-    Events with unknown timbre (kind '?') are dropped.
-    """
+    """Rebuild full melodies (open + stopped + harmonic, in idx order)."""
     reader = csv.DictReader(clean_csv.open())
     required = {
-        "piece", "section", "idx", "convention", "degree4_semitones",
-        "K", "physical_semitones", "residual", "status",
+        "piece",
+        "section",
+        "idx",
+        "convention",
+        "degree4_semitones",
+        "K",
+        "physical_semitones",
+        "residual",
+        "status",
     }
     missing = required - set(reader.fieldnames or [])
     if missing:
@@ -228,11 +181,7 @@ def build_sequences(data_dir: Path, clean_csv: Path) -> list[PieceSequence]:
 # Reachability diagnostics
 def reach_report(seqs: list[PieceSequence], scored_only: bool = True) -> None:
     """Print per-kind reachability and the snap-distance distribution.
-
-    Run this BEFORE trusting any accuracy number: reach rate is the
-    ceiling on exact accuracy, and the distance distribution is what
-    SNAP_TOL should be set from.
-    """
+    Rreach rate is the ceiling on exact accuracy"""
     tally: Counter = Counter()
     dists: dict[str, list[float]] = defaultdict(list)
     misses: dict[str, list[float]] = defaultdict(list)
@@ -264,9 +213,11 @@ def reach_report(seqs: list[PieceSequence], scored_only: bool = True) -> None:
         ds = sorted(dists[kind])
         if not ds:
             continue
-        p = lambda q: ds[min(len(ds) - 1, int(len(ds) * q))]  # noqa: E731
-        print(f"  {kind:9s} n={len(ds):5d}  median {statistics.median(ds):.3f}  "
-              f"p90 {p(0.90):.3f}  p99 {p(0.99):.3f}  max {ds[-1]:.3f}")
+        p = lambda q: ds[min(len(ds) - 1, int(len(ds) * q))]
+        print(
+            f"  {kind:9s} n={len(ds):5d}  median {statistics.median(ds):.3f}  "
+            f"p90 {p(0.90):.3f}  p99 {p(0.99):.3f}  max {ds[-1]:.3f}"
+        )
 
     print("\nunreachable breakdown")
     for kind in ("stopped", "open", "harmonic"):
@@ -275,8 +226,7 @@ def reach_report(seqs: list[PieceSequence], scored_only: bool = True) -> None:
             continue
         no_cand = sum(1 for d in ms if d == float("inf"))
         too_far = [d for d in ms if d < float("inf")]
-        print(f"  {kind:9s} {no_cand:4d} no candidate on that string, "
-              f"{len(too_far):4d} position too far", end="")
+        print(f"  {kind:9s} {no_cand:4d} no candidate on that string, {len(too_far):4d} position too far", end="")
         if too_far:
             print(f" (closest {min(too_far):.3f}, median {statistics.median(too_far):.3f})")
         else:
@@ -285,18 +235,8 @@ def reach_report(seqs: list[PieceSequence], scored_only: bool = True) -> None:
 
 # Learning target
 def gold_path(seq: PieceSequence, w) -> list[Candidate]:
-    """Best path that agrees with the expert wherever the expert is
-    reachable, and is free elsewhere.
-
-    This is the learning target. Because every column is drawn from the
-    real lattice, the target is always a path the decoder could produce,
-    so the perceptron update direction is attainable. When every note is
-    reachable this reduces to the expert path itself.
-    """
-    lattice = [
-        [gold] if ok else candidates_for(note)
-        for note, gold, ok in zip(seq.notes, seq.expert, seq.reachable)
-    ]
+    """Best path that agrees with the expert wherever the expert is reachable, and is free elsewhere."""
+    lattice = [[gold] if ok else candidates_for(note) for note, gold, ok in zip(seq.notes, seq.expert, seq.reachable)]
     return decode_lattice(lattice, w)
 
 
@@ -308,13 +248,7 @@ def train(
     init=None,
     use_gold_path: bool = True,
 ) -> WeightVector:
-    """Averaged structured perceptron over whole-piece paths.
-
-    use_gold_path=False reproduces the pre-reachability behaviour (raw
-    expert annotation as the target). Keep it for the ablation table:
-    the difference between the two is the measured cost of targeting an
-    unattainable path.
-    """
+    """Averaged structured perceptron over whole-piece paths."""
     w = WeightVector(init)
     total = WeightVector()
     n_accum = 0
@@ -336,19 +270,7 @@ def train(
 
 
 def evaluate(seqs: list[PieceSequence], w, kinds_known: bool = False) -> dict[str, float]:
-    """Accuracy over scored notes.
-
-    kinds_known=True feeds the expert's timbre as a lattice constraint
-    (string-choice-only protocol, comparable to the Phase 2 eval);
-    False is full free choice.
-
-    Reported separately:
-      exact_acc         over all scored notes (what the user would see)
-      reach_rate        fraction expressible at all (ceiling on exact_acc)
-      exact_given_reach accuracy where the answer was attainable
-    Unreachable notes are NOT dropped from exact_acc -- a candidate that
-    cannot be generated is a real system failure, not a free pass.
-    """
+    """Accuracy over scored notes. Unreachable notes are NOT dropped from exact_acc."""
     n = kind_ok = string_ok = both_ok = n_reach = both_ok_reach = 0
     for seq in seqs:
         kinds = [c.kind for c in seq.expert] if kinds_known else None
@@ -369,7 +291,7 @@ def evaluate(seqs: list[PieceSequence], w, kinds_known: bool = False) -> dict[st
         "n": n,
         "kind_acc": kind_ok / d,
         "string_acc": string_ok / d,
-        "exact_acc": both_ok / d,
-        "reach_rate": n_reach / d,
-        "exact_given_reach": both_ok_reach / max(1, n_reach),
+        "exact_acc": both_ok / d,  # over all scored notes (what the user would see)
+        "reach_rate": n_reach / d,  # fraction expressible at all (ceiling on exact_acc)
+        "exact_given_reach": both_ok_reach / max(1, n_reach),  # accuracy where the answer was attainable
     }

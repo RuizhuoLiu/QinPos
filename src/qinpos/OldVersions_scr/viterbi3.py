@@ -1,33 +1,14 @@
 """Viterbi decoding over the candidate lattice.
+(49.7% default / 51.5% coarse grid): two-sided linear pull toward CENTER_HUI = 8.5
 
-[VERSION 3]
-    v1 (design_history/viterbi_v1_cramped_only.py, 17.4%): one-sided
-       "cramped above hui 5" penalty; no force toward the expert's
-       hui 7-10 region, decoder drifted to low strings.
-    v2 (design_history/viterbi_v2_comfort_band.py, 23.2%): flat comfort
-       band [5, 10]; still no gradient inside the band where most
-       decisions happen.
-    v3 (49.7% default / 51.5% coarse grid): two-sided linear
-       pull toward CENTER_HUI = 8.5, chosen after measuring that a
-       context-free "nearest string to hui 8.5" heuristic alone scores
-       51.1% against experts. Arc features currently contribute little
-       under hand-crafted weights — the designed remedy is Phase 3
-       path-difference learning, for which this file's linear
-       weight-times-feature structure is the interface.
-
-Framework follows Sayegh (1989): fingering assignment as a minimum-cost
-path through a per-note candidate lattice, solved by dynamic programming.
+Framework follows Sayegh (1989): fingering assignment as a minimum-cost path through a per-note candidate lattice, 
+solved by dynamic programming.
 
 Costs are deliberately structured as  weight · feature  (a linear model):
     total_cost(path) = sum_i  w · f_node(c_i)  +  sum_i  w · f_arc(c_{i-1}, c_i)
-so that Phase 3 (path-difference learning, Radisavljevic and Driessen,
-2004) can later replace the hand-crafted weights with learned ones
-without touching the decoder: the gradient of the total cost w.r.t. w is
-just the feature-count difference between the expert path and the
-current best path.
 
 Complexity: O(n * S^2) for n notes and S candidates per note (S <= ~12),
-i.e. instantaneous for any realistic piece.
+- instantaneous for any realistic piece.
 """
 
 from __future__ import annotations
@@ -83,7 +64,7 @@ def arc_features(a: Candidate, b: Candidate) -> dict[str, float]:
 @dataclass(frozen=True)
 class Weights:
     is_open: float = -0.3  # mild preference for resonant open strings
-    is_harmonic: float = 0.0  # neutral unless the score demands 泛音
+    is_harmonic: float = 0.0  # neutral unless the score demands harmonic 泛音
     below_center: float = 0.6  # per-hui pull toward hui 8.5 (yueshan side)
     above_center: float = 0.6  # per-hui pull toward hui 8.5 (nut side)
     string_cross: float = 0.3  # per-string crossing cost (right hand)

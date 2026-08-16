@@ -1,7 +1,9 @@
-"""[VERSION 1] First cost function. SUPERSEDED.
+"""First cost function. SUPERSEDED.
 
-Single ONE-SIDED penalty: cramped_high = max(0, 5 - position); only positions above hui 5 (toward yueshan) penalised, everything else free.
-Measured 17.4%, worse than the 25.4% majority baseline. Diagnosed via predicted-vs-expert string histograms: experts put 49% of stopped notes on strings 6-7 and 78% of positions in hui 7-10;
+Single ONE-SIDED penalty: cramped_high = max(0, 5 - position); only positions above hui 5 (toward yueshan) penalised, 
+everything else free. Measured 17.4%, worse than the 25.4% majority baseline. 
+Diagnosed via predicted-vs-expert string histograms: 
+experts put 49% of stopped notes on strings 6-7 and 78% of positions in hui 7-10;
 this cost has no force toward that region, so the DP drifted to low strings.
 LESSON: a cost function needs a gradient everywhere the decoder must choose, not only a wall at the region you want to forbid.
 Runnable standalone; do not import from the pipeline.

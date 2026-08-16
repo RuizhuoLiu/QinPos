@@ -6,10 +6,8 @@ Columns consumed per event row:
     'L tech (timbre)'    -> 1 = harmonic, 2 = open, 3 = stopped
 
 Messy realities handled:
-    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in
-      one cell, either as strings '2,3,5' or floats 3.6 (Excel turned a
-      comma into a decimal point on integer columns). Exploded here
-      into simultaneous events sharing an onset.
+    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in one cell, either as strings '2,3,5' or floats 3.6
+    (Excel turned a comma into a decimal point on integer columns). Exploded here into simultaneous events sharing an onset.
     * `position` mixes float / str / 0 (open).
     * Legend text in trailing columns is ignored.
 """
@@ -34,26 +32,18 @@ class Event:
     range_: int
     string: int
     position: float
-    kind: str            # open | stopped | harmonic | ?
+    kind: str  # open | stopped | harmonic | ?
     onset: float
-    multi: bool = False    # part of a chord / sweep
+    multi: bool = False  # part of a chord / sweep
     suspect: bool = False  # position was repaired from a period-packed cell
 
 
 def _values(cell, integer_column: bool) -> list[float]:
     """Parse a cell into a list of numeric values.
 
-    integer_column=True means the column semantically holds integers
-    (degree, range, string, timbre), so a fractional value like 3.6 must
-    be the packed pair (3, 6) — the annotator's comma became a period.
-    This applies whether the cell arrived as a FLOAT (Excel numeric) or
-    as TEXT ('3.6'): before this fix, text cells were only split on
-    commas, so '6.1' fell through to float('6.1') and int() truncation
-    silently DROPPED the second chord note.
-
-    position is NOT such a column: 7.9 is a real hui.fen value there.
-    Period-vs-comma disambiguation for position needs the multi-note
-    context and happens in _explode, not here.
+    The column semantically holds integers (degree, range, string, timbre),
+    so a float like 3.6 must be the packed pair (3, 6).
+    position is NOT such a column: 7.9 is a real hui.fen value there, and packed positions only appear as strings.
     """
     if isinstance(cell, str):
         text = cell.replace("\uff0c", ",")
@@ -78,17 +68,13 @@ def _explode(row) -> list[tuple]:
 
     n = max(map(len, (degrees, ranges, strings, timbres)))
 
-    # Count-consistency rule for the ambiguous position column:
-    # if the OTHER columns say this row holds n>1 notes but position
-    # parsed to a single value with a fractional part (e.g. '8.7'),
-    # the period is almost certainly a mistyped comma — '8.7' means
-    # positions (8, 7), one per note. Internal evidence: rows where the
-    # annotator DID type the comma (e.g. '7,6.5') sit right next to
-    # period rows in the same sheet, and the split reading is the only
-    # physically possible one when both notes share a string (two
-    # different degrees cannot sound at the same position on the same
-    # string). Rows repaired this way are flagged suspect=True so the
-    # cleaning stage can double-check them against the physics.
+    """Count-consistency rule for the ambiguous position column:
+    if the row holds n>1 notes, but position parsed to a single fractional (e.g. '8.7'),
+    it should be comma, '8.7' means positions (8, 7), one per note. 
+    
+    Internal evidence: both comma and period appear (e.g. '7,6.5') - both notes share a string 
+    (two different degrees cannot sound at the same position on the same string). 
+    will be flagged suspect=True"""
     suspect = False
     if n > 1 and len(positions) == 1 and positions[0] != int(positions[0]):
         v = positions[0]
@@ -105,8 +91,7 @@ def _explode(row) -> list[tuple]:
     multi = n > 1
     return [
         (int(d), int(r), int(s), p, None if t is None else int(t), multi, suspect)
-        for d, r, s, p, t in zip(pad(degrees), pad(ranges), pad(strings),
-                                 pad(positions), pad(timbres))
+        for d, r, s, p, t in zip(pad(degrees), pad(ranges), pad(strings), pad(positions), pad(timbres))
     ]
 
 
@@ -127,9 +112,7 @@ def load_piece(path: Path) -> list[Event]:
                 kind = TIMBRE.get(tim, "?")
                 if pos == 0.0 and kind == "?":
                     kind = "open"
-                events.append(Event(path.stem, sheet_name, len(events),
-                                    deg, rng, st, pos, kind, onset, multi,
-                                    suspect))
+                events.append(Event(path.stem, sheet_name, len(events), deg, rng, st, pos, kind, onset, multi, suspect))
         out.extend(events)
     return out
 

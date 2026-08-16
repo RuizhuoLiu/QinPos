@@ -1,4 +1,4 @@
-"""[VERSION 2] Comfort-band cost. SUPERSEDED.
+"""Comfort-band cost. SUPERSEDED.
 
 Two-sided comfort BAND [hui 5, hui 10]: zero cost inside, linear penalty outside. 
 Fixed v1's missing nut-side wall but kept the flat interior, no gradient where most string choices actually happen,
@@ -123,9 +123,8 @@ def decode_lattice(lattice: list[list[Candidate]],
 
 def decode(notes: list[Note], w: Weights = Weights(),
            kinds: list[str] | None = None) -> list[Candidate]:
-    """Decode a melody. If `kinds` is given (one of 'open'/'stopped'/
-    'harmonic'/None per note, e.g. from a score's timbre markings), the
-    lattice is restricted to candidates of that kind for that note."""
+    """Decode a melody. If `kinds` is given (one of 'open'/'stopped'/ 'harmonic'/None per note), 
+    the lattice is restricted to candidates of that kind for that note."""
     lattice = []
     for i, n in enumerate(notes):
         cands = candidates_for(n)

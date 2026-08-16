@@ -6,7 +6,8 @@ Columns consumed per event row:
     'L tech (timbre)'    -> 1 = harmonic, 2 = open, 3 = stopped
 
 Messy realities handled:
-    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in one cell, either as strings '2,3,5' or floats 3.6 (Excel turned a comma into a decimal point on integer columns). Exploded here into simultaneous events sharing an onset.
+    * Chords 撮 and multi-string sweeps 历/滚拂 pack several values in one cell, either as strings '2,3,5' or floats 3.6 
+    (Excel turned a comma into a decimal point on integer columns). Exploded here into simultaneous events sharing an onset.
     * `position` mixes float / str / 0 (open).
     * Legend text in trailing columns is ignored.
 """
@@ -39,7 +40,9 @@ class Event:
 def _values(cell, integer_column: bool) -> list[float]:
     """Parse a cell into a list of numeric values.
 
-    integer_column=True means the column semantically holds integers (degree, range, string, timbre), so a float like 3.6 must be the packed pair (3, 6). position is NOT such a column: 7.9 is a real hui.fen value there, and packed positions only appear as strings.
+    The column semantically holds integers (degree, range, string, timbre), 
+    so a float like 3.6 must be the packed pair (3, 6). 
+    position is NOT such a column: 7.9 is a real hui.fen value there, and packed positions only appear as strings.
     """
     if isinstance(cell, str):
         parts = cell.replace("\uff0c", ",").split(",")  # ，to,
