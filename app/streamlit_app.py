@@ -23,10 +23,8 @@ if str(ROOT / "src") not in sys.path:
 
 from qinpos import jianzipu as jz  # noqa: E402
 from qinpos import viz  # noqa: E402
-from qinpos.infer import (describe, fingering_rows, predict,  # noqa: E402
-                          timbre_mix)
-from qinpos.jianpu import (parse_jianpu, range_report,  # noqa: E402
-                           suggest_header)
+from qinpos.infer import describe, fingering_rows, predict, timbre_mix  # noqa: E402
+from qinpos.jianpu import parse_jianpu, range_report, suggest_header  # noqa: E402
 from qinpos.theory import HUI_FRACTIONS  # noqa: E402
 
 # weight files are enumerated in WEIGHT_FILES below
@@ -36,18 +34,22 @@ MAX_VIDEO_FRAMES = 400
 st.set_page_config(page_title="QinPos", page_icon="🎼", layout="wide")
 
 
-# --------------------------------------------------------------------------
 # cached resources
-# --------------------------------------------------------------------------
 
 
 WEIGHT_FILES = [
-    ("CRF", "crf_weights.json",
-     "Linear-chain CRF. The only model that produces per-note marginals, so "
-     "the heat map and the confidence numbers mean what they say."),
-    ("Perceptron", "learned_weights.json",
-     "Averaged structured perceptron. Trained to separate the best path, not "
-     "to model probabilities — see the calibration note below."),
+    (
+        "CRF",
+        "crf_weights.json",
+        "Linear-chain CRF. The only model that produces per-note marginals, so "
+        "the heat map and the confidence numbers mean what they say.",
+    ),
+    (
+        "Perceptron",
+        "learned_weights.json",
+        "Averaged structured perceptron. Trained to separate the best path, not "
+        "to model probabilities — see the calibration note below.",
+    ),
 ]
 
 
@@ -74,8 +76,7 @@ def available_models() -> dict[str, tuple[object, str]]:
     hand = Weights()
     out["Hand-crafted defaults"] = (
         WeightVector({k: getattr(hand, k, 0.0) for k in FEATURES}),
-        "Domain-knowledge costs from viterbi.Weights, never trained. A floor "
-        "to measure learning against, not a model.",
+        "Domain-knowledge costs from viterbi.Weights, never trained. A floor to measure learning against, not a model.",
     )
     return out
 
@@ -157,8 +158,10 @@ def preset_diagnostics() -> str | None:
         return f"No `{PRESET_DIR}` directory — scores are loaded from there."
     others = sorted(q.name for q in PRESET_DIR.iterdir() if q.is_file())[:8]
     listing = ", ".join(f"`{n}`" for n in others) or "(empty)"
-    return (f"No `*.jianpu` files in `{PRESET_DIR}`. It currently holds: "
-            f"{listing}. Note that browsers often append `.txt` on download.")
+    return (
+        f"No `*.jianpu` files in `{PRESET_DIR}`. It currently holds: "
+        f"{listing}. Note that browsers often append `.txt` on download."
+    )
 
 
 def show_svg(svg: str, height: int | None = None) -> None:
@@ -179,7 +182,8 @@ def show_svg(svg: str, height: int | None = None) -> None:
     try:
         st.components.v1.html(
             f"<div style='overflow:auto;width:100%'>{svg}</div>",
-            height=height or 520, scrolling=True,
+            height=height or 520,
+            scrolling=True,
         )
         return
     except Exception:
@@ -192,13 +196,11 @@ def show_svg(svg: str, height: int | None = None) -> None:
     )
 
 
-# --------------------------------------------------------------------------
 # sidebar
-# --------------------------------------------------------------------------
 
 st.sidebar.title("QinPos")
 st.sidebar.caption(
-    "Numbered notation in, fingering out: 弦位 · 徽位 · 音色. "
+    "Numbered notation in, fingering out: string弦位 · hui徽位 · timbre音色. "
     "Fingering for either hand is outside the model's scope and is drawn as "
     "empty slots rather than guessed."
 )
@@ -206,7 +208,9 @@ st.sidebar.caption(
 _models = available_models()
 st.sidebar.subheader("Model")
 model_choice = st.sidebar.radio(
-    "Weights", list(_models), label_visibility="collapsed",
+    "Weights",
+    list(_models),
+    label_visibility="collapsed",
 )
 st.sidebar.caption(_models[model_choice][1])
 if len(_models) == 1:
@@ -223,19 +227,25 @@ if not model_choice.startswith("CRF"):
 
 _assets, _missing = load_glyphs()
 if _assets is None:
-    st.sidebar.error(
-        "Glyph components missing. Run `python scripts/fetch_jianzipu_assets.py`."
-    )
+    st.sidebar.error("Glyph components missing. Run `python scripts/fetch_jianzipu_assets.py`.")
 elif _missing:
     st.sidebar.warning(f"{len(_missing)} glyph components missing; re-run the fetcher.")
 
 st.sidebar.subheader("Difficulty")
 open_bias = st.sidebar.slider(
-    "散音 preference", -3.0, 3.0, 0.0, 0.25,
+    "open散音 preference",
+    -3.0,
+    3.0,
+    0.0,
+    0.25,
     help="Right = more open strings = easier. Left = more stopped notes.",
 )
 harm_bias = st.sidebar.slider(
-    "泛音 preference", -3.0, 3.0, 0.0, 0.25,
+    "harmonic泛音 preference",
+    -3.0,
+    3.0,
+    0.0,
+    0.25,
     help="Right = more harmonics.",
 )
 
@@ -246,40 +256,39 @@ LABEL_MODES = {
     "中英对照 / bilingual": (True, True, "both"),
 }
 label_mode = st.sidebar.selectbox(
-    "Labels", list(LABEL_MODES), index=2,
+    "Labels",
+    list(LABEL_MODES),
+    index=2,
     help="Applies to the fingerboard labels, the candidate list and the "
-         "fingering table. Video exports always use English, because a "
-         "rasteriser without a CJK font renders Chinese as empty boxes.",
+    "fingering table. Video exports always use English, because a "
+    "rasteriser without a CJK font renders Chinese as empty boxes.",
 )
 board_cjk, board_bilingual, table_lang = LABEL_MODES[label_mode]
 
 st.sidebar.subheader("Tablature layout")
 orientation_label = st.sidebar.selectbox(
     "Reading order",
-    ["horizontal, left to right",
-     "vertical, right to left (traditional)",
-     "vertical, left to right"],
+    ["horizontal, left to right", "vertical, right to left (traditional)", "vertical, left to right"],
 )
 orientation = "horizontal" if orientation_label.startswith("horizontal") else "vertical"
 right_to_left = "right to left" in orientation_label
 show_labels = st.sidebar.checkbox(
-    "Print the jianpu above each glyph", value=True,
+    "Print the jianpu above each glyph",
+    value=True,
     help="Numbered notation and tablature on one page, the way modern 琴谱 are set.",
 )
 colour_timbre = st.sidebar.checkbox(
-    "Colour glyphs by timbre", value=True,
-    help="Same hues as the fingerboard: amber 按音, blue 散音, green 泛音. "
-         "Turn off for a monochrome figure.",
+    "Colour glyphs by timbre",
+    value=True,
+    help="Same hues as the fingerboard: amber 按音, blue 散音, green 泛音. Turn off for a monochrome figure.",
 )
 glyph_width = st.sidebar.slider("Glyph size", 60, 160, 95, 5)
 per_line = st.sidebar.slider("Glyphs per line", 4, 20, 10)
 
 
-# --------------------------------------------------------------------------
 # input
-# --------------------------------------------------------------------------
 
-st.title("Jianpu → skeleton 减字谱")
+st.title("Jianpu → skeleton Jianzipu减字谱")
 
 _presets = presets()
 col_pick, col_help = st.columns([1, 2])
@@ -288,7 +297,8 @@ with col_pick:
     if _diag:
         st.warning(_diag)
     choice = st.selectbox(
-        "Load a score", list(_presets),
+        "Load a score",
+        list(_presets),
         help="Pick one to see the model work, or choose blank and type your own.",
     )
 with col_help:
@@ -311,7 +321,7 @@ text = st.text_area("Jianpu", value=_presets[choice], height=220, key=f"src_{cho
 score, pred = run_model(text, model_choice, open_bias, harm_bias)
 rng = range_report(score)
 
-# ---- diagnostics ----
+# diagnostics
 if score.errors:
     for e in score.errors:
         st.error(e)
@@ -345,19 +355,11 @@ m4.metric("Ambiguous (P<0.5)", f"{low_conf}", help="Notes with no clearly best f
 if score.warnings:
     st.caption(" · ".join(score.warnings))
 if pred.baseline_path is not None:
-    st.caption(
-        f"{sum(pred.changed_vs_baseline)} of {len(pred.path)} notes moved "
-        f"since the sliders were at zero."
-    )
+    st.caption(f"{sum(pred.changed_vs_baseline)} of {len(pred.path)} notes moved since the sliders were at zero.")
 
 
-# --------------------------------------------------------------------------
 # output
-# --------------------------------------------------------------------------
-
-tab_score, tab_note, tab_table, tab_export = st.tabs(
-    ["Tablature", "Fingerboard", "Table", "Export"]
-)
+tab_score, tab_note, tab_table, tab_export = st.tabs(["Tablature", "Fingerboard", "Table", "Export"])
 
 tablature_svg = None
 with tab_score:
@@ -371,8 +373,11 @@ with tab_score:
             "because an open string genuinely has no left hand."
         )
         tablature_svg = jz.render_score(
-            pred.path, assets=_assets, glyph_width=glyph_width,
-            per_column=per_line, orientation=orientation,
+            pred.path,
+            assets=_assets,
+            glyph_width=glyph_width,
+            per_column=per_line,
+            orientation=orientation,
             right_to_left=right_to_left,
             labels=([t.raw for t in score.note_tokens()] if show_labels else None),
             colour_timbre=colour_timbre,
@@ -387,18 +392,24 @@ with tab_note:
     panel, panel_w = None, 0.0
     if _assets is not None:
         panel_w = 280.0
-        panel = ("<rect width='280' height='454' fill='#faf6ec' rx='10'/>"
-                 + jz.glyph_group(pred.path[i], assets=_assets, x=52, y=34,
-                                  scale=176 / jz.CELL[2]))
+        panel = "<rect width='280' height='454' fill='#faf6ec' rx='10'/>" + jz.glyph_group(
+            pred.path[i], assets=_assets, x=52, y=34, scale=176 / jz.CELL[2]
+        )
     if not pred.marginals[i]:
-        st.error(f"Note {i + 1} has no candidates — this should be impossible; "
-                 f"please report the melody that caused it.")
+        st.error(
+            f"Note {i + 1} has no candidates — this should be impossible; please report the melody that caused it."
+        )
         st.stop()
     frame = viz.render_frame(
-        pred.marginals, i, hui_fractions=HUI_FRACTIONS,
-        baselines=pred.baseline_path, changed=pred.changed_vs_baseline,
-        side_panel=panel, side_panel_width=panel_w,
-        cjk=board_cjk, bilingual=board_bilingual,
+        pred.marginals,
+        i,
+        hui_fractions=HUI_FRACTIONS,
+        baselines=pred.baseline_path,
+        changed=pred.changed_vs_baseline,
+        side_panel=panel,
+        side_panel_width=panel_w,
+        cjk=board_cjk,
+        bilingual=board_bilingual,
         title=f"note {i + 1} / {len(pred.path)}",
         subtitle=f"jianpu {tok.raw} · {tok.semitones:+.0f} semitones above 一弦散",
     )
@@ -419,8 +430,7 @@ with tab_note:
             st.write(f"- **{en}** — {prob:.0%}")
 
 with tab_table:
-    st.dataframe(fingering_rows(pred, score.note_tokens(), lang=table_lang),
-                 width="stretch", hide_index=True)
+    st.dataframe(fingering_rows(pred, score.note_tokens(), lang=table_lang), width="stretch", hide_index=True)
 
 with tab_export:
     stem = (score.meta.get("title") or "melody").replace(" ", "_")[:40]
@@ -434,26 +444,29 @@ with tab_export:
             "they need `cairosvg` installed."
         )
         i1, i2, i3 = st.columns([1, 1, 2])
-        img_fmt = i1.radio("Format", ["PNG", "JPG"], horizontal=True,
-                           label_visibility="collapsed")
-        img_scale = i2.select_slider("Resolution", [1.0, 1.5, 2.0, 3.0, 4.0], 2.0,
-                                     format_func=lambda v: f"{v:g}×")
+        img_fmt = i1.radio("Format", ["PNG", "JPG"], horizontal=True, label_visibility="collapsed")
+        img_scale = i2.select_slider("Resolution", [1.0, 1.5, 2.0, 3.0, 4.0], 2.0, format_func=lambda v: f"{v:g}×")
         with i3:
             st.write("")
             prepare = st.button(f"Prepare {img_fmt}", width="stretch")
 
         b1, b2 = st.columns(2)
-        b1.download_button("⬇ Tablature (SVG)", tablature_svg.encode("utf-8"),
-                           f"{stem}_jianzipu.svg", "image/svg+xml", width="stretch")
+        b1.download_button(
+            "⬇ Tablature (SVG)", tablature_svg.encode("utf-8"), f"{stem}_jianzipu.svg", "image/svg+xml", width="stretch"
+        )
         if prepare:
             try:
                 with st.spinner(f"rendering {img_fmt} at {img_scale:g}×"):
                     data = rasterise(tablature_svg, img_fmt, img_scale)
                 ext = img_fmt.lower()
                 b2.download_button(
-                    f"⬇ Tablature ({img_fmt}, {len(data) // 1024} KB)", data,
-                    f"{stem}_jianzipu.{ext}", f"image/{'jpeg' if ext == 'jpg' else 'png'}",
-                    width="stretch", type="primary")
+                    f"⬇ Tablature ({img_fmt}, {len(data) // 1024} KB)",
+                    data,
+                    f"{stem}_jianzipu.{ext}",
+                    f"image/{'jpeg' if ext == 'jpg' else 'png'}",
+                    width="stretch",
+                    type="primary",
+                )
             except Exception as exc:
                 b2.error(f"{exc}")
 
@@ -466,10 +479,10 @@ with tab_export:
     _wtr = _csv.DictWriter(_buf, fieldnames=list(_rows[0]))
     _wtr.writeheader()
     _wtr.writerows(_rows)
-    c2.download_button("⬇ Fingering (CSV)", _buf.getvalue().encode("utf-8-sig"),
-                       f"{stem}_fingering.csv", "text/csv", width="stretch")
-    c3.download_button("⬇ Jianpu source", text.encode("utf-8"),
-                       f"{stem}.jianpu", "text/plain", width="stretch")
+    c2.download_button(
+        "⬇ Fingering (CSV)", _buf.getvalue().encode("utf-8-sig"), f"{stem}_fingering.csv", "text/csv", width="stretch"
+    )
+    c3.download_button("⬇ Jianpu source", text.encode("utf-8"), f"{stem}.jianpu", "text/plain", width="stretch")
 
     st.subheader("Video")
     st.caption(
@@ -481,8 +494,7 @@ with tab_export:
     vc1, vc2, vc3 = st.columns(3)
     fps = vc1.slider("fps", 0.5, 8.0, 2.0, 0.5)
     fmt = vc2.selectbox("Format", ["html (no dependencies)", "mp4", "gif"])
-    scale = vc3.slider("Raster scale", 1.0, 3.0, 2.0, 0.5,
-                       disabled=fmt.startswith("html"))
+    scale = vc3.slider("Raster scale", 1.0, 3.0, 2.0, 0.5, disabled=fmt.startswith("html"))
 
     n_frames = min(len(pred.path), MAX_VIDEO_FRAMES)
     if n_frames < len(pred.path):
@@ -494,17 +506,23 @@ with tab_export:
         for k in range(n_frames):
             side = None
             if _assets is not None:
-                side = ("<rect width='280' height='454' fill='#faf6ec' rx='10'/>"
-                        + jz.glyph_group(pred.path[k], assets=_assets, x=52, y=34,
-                                         scale=176 / jz.CELL[2]))
-            frames.append(viz.render_frame(
-                pred.marginals, k, hui_fractions=HUI_FRACTIONS,
-                baselines=pred.baseline_path, changed=pred.changed_vs_baseline,
-                side_panel=side, side_panel_width=0.0 if side is None else 280.0,
-                cjk=False,
-                title=f"{stem} — note {k + 1} / {len(pred.path)}",
-                subtitle=f"jianpu {score.note_tokens()[k].raw}",
-            ))
+                side = "<rect width='280' height='454' fill='#faf6ec' rx='10'/>" + jz.glyph_group(
+                    pred.path[k], assets=_assets, x=52, y=34, scale=176 / jz.CELL[2]
+                )
+            frames.append(
+                viz.render_frame(
+                    pred.marginals,
+                    k,
+                    hui_fractions=HUI_FRACTIONS,
+                    baselines=pred.baseline_path,
+                    changed=pred.changed_vs_baseline,
+                    side_panel=side,
+                    side_panel_width=0.0 if side is None else 280.0,
+                    cjk=False,
+                    title=f"{stem} — note {k + 1} / {len(pred.path)}",
+                    subtitle=f"jianpu {score.note_tokens()[k].raw}",
+                )
+            )
             if k % 10 == 0:
                 progress.progress(k / max(n_frames, 1), "rendering frames")
 
@@ -514,23 +532,19 @@ with tab_export:
 
             with tempfile.TemporaryDirectory() as d:
                 if fmt.startswith("html"):
-                    path = viz.export_html_player(
-                        frames, Path(d) / f"{stem}.html", fps=fps, title=stem)
+                    path = viz.export_html_player(frames, Path(d) / f"{stem}.html", fps=fps, title=stem)
                     mime = "text/html"
                 elif fmt == "mp4":
-                    path = viz.export_video(
-                        frames, Path(d) / f"{stem}.mp4", fps=fps, scale=scale)
+                    path = viz.export_video(frames, Path(d) / f"{stem}.mp4", fps=fps, scale=scale)
                     mime = "video/mp4" if path.suffix == ".mp4" else "image/gif"
                 else:
-                    path = viz.export_gif(
-                        frames, Path(d) / f"{stem}.gif", fps=fps, scale=scale)
+                    path = viz.export_gif(frames, Path(d) / f"{stem}.gif", fps=fps, scale=scale)
                     mime = "image/gif"
                 data = path.read_bytes()
             progress.empty()
             if mime == "video/mp4":
                 st.video(data)
-            st.download_button(f"⬇ {path.name}", data, path.name, mime,
-                               type="primary")
+            st.download_button(f"⬇ {path.name}", data, path.name, mime, type="primary")
         except Exception as exc:
             progress.empty()
             st.error(f"Encoding failed: {exc}")
